@@ -6,7 +6,7 @@ mod 'puppetlabs/glance', :git => 'git://github.com/bodepd/puppetlabs-glance', :r
 mod 'puppetlabs/keystone', :git => 'git://github.com/bodepd/puppetlabs-keystone', :ref => 'folsom'
 mod 'puppetlabs/horizon', :git => 'git://github.com/bodepd/puppetlabs-horizon', :ref => 'folsom'
 mod 'puppetlabs/swift', :git => 'git://github.com/puppetlabs/puppetlabs-swift'
-mod 'bodepd/devstack', :git => 'git://github.com/bodepd/puppetlabs-devstac'k
+mod 'bodepd/devstack', :git => 'git://github.com/bodepd/puppetlabs-devstack'
 # openstack middleware
 mod 'puppetlabs/rabbitmq', :git => 'git://github.com/puppetlabs/puppetlabs-rabbitmq'
 mod 'puppetlabs/mysql', :git => 'git://github.com/puppetlabs/puppetlabs-mysql'
