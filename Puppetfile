@@ -1,12 +1,12 @@
 forge "http://forge.puppetlabs.com"
 
-mod 'bodepd/devstack', :git => 'git://github.com/bodepd/puppetlabs-devstack'
-mod 'puppetlabs/openstack', :git => 'git://github.com/puppetlabs/puppetlabs-openstack'
-mod 'puppetlabs/nova', :git => 'git://github.com/puppetlabs/puppetlabs-nova'
-mod 'puppetlabs/glance', :git => 'git://github.com/puppetlabs/puppetlabs-glance'
+mod 'puppetlabs/openstack', :git => 'git://github.com/bodepd/puppetlabs-openstack', :ref => 'folsom'
+mod 'puppetlabs/nova', :git => 'git://github.com/bodepd/puppetlabs-nova', :ref => 'folsom'
+mod 'puppetlabs/glance', :git => 'git://github.com/bodepd/puppetlabs-glance', :ref => 'folsom'
+mod 'puppetlabs/keystone', :git => 'git://github.com/bodepd/puppetlabs-keystone', :ref => 'folsom'
+mod 'puppetlabs/horizon', :git => 'git://github.com/bodepd/puppetlabs-horizon', :ref => 'folsom'
 mod 'puppetlabs/swift', :git => 'git://github.com/puppetlabs/puppetlabs-swift'
-mod 'puppetlabs/keystone', :git => 'git://github.com/puppetlabs/puppetlabs-keystone'
-mod 'puppetlabs/horizon', :git => 'git://github.com/puppetlabs/puppetlabs-horizon'
+mod 'bodepd/devstack', :git => 'git://github.com/bodepd/puppetlabs-devstac'k
 # openstack middleware
 mod 'puppetlabs/rabbitmq', :git => 'git://github.com/puppetlabs/puppetlabs-rabbitmq'
 mod 'puppetlabs/mysql', :git => 'git://github.com/puppetlabs/puppetlabs-mysql'

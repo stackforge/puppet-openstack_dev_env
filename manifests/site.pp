@@ -11,31 +11,6 @@
 # be used in the deployment of multi and single node openstack
 # environments
 
-# assumes that eth0 is the public interface
-$public_interface        = 'eth0'
-# assumes that eth1 is the interface that will be used for the vm network
-# this configuration assumes this interface is active but does not have an
-# ip address allocated to it.
-$private_interface       = 'eth2'
-# credentials
-$admin_email             = 'root@localhost'
-$admin_password          = 'keystone_admin'
-$keystone_db_password    = 'keystone_db_pass'
-$keystone_admin_token    = 'keystone_admin_token'
-$nova_db_password        = 'nova_pass'
-$nova_user_password      = 'nova_pass'
-$glance_db_password      = 'glance_pass'
-$glance_user_password    = 'glance_pass'
-$rabbit_password         = 'openstack_rabbit_password'
-$rabbit_user             = 'openstack_rabbit_user'
-$fixed_network_range     = '10.0.0.0/24'
-$floating_network_range  = '172.16.0.192/26'
-# switch this to true to have all service log at verbose
-$verbose                 = false
-# by default it does not enable atomatically adding floating IPs
-$auto_assign_floating_ip = false
-
-
 #### end shared variables #################
 
 # all nodes whose certname matches openstack_all should be
@@ -46,24 +21,24 @@ node /openstack-all/ {
 class { 'openstack::test_file': }
 
   class { 'openstack::all':
-    public_address          => $ipaddress_eth1,
-    public_interface        => $public_interface,
-    private_interface       => $private_interface,
-    admin_email             => $admin_email,
-    admin_password          => $admin_password,
-    keystone_db_password    => $keystone_db_password,
-    keystone_admin_token    => $keystone_admin_token,
-    nova_db_password        => $nova_db_password,
-    nova_user_password      => $nova_user_password,
-    glance_db_password      => $glance_db_password,
-    glance_user_password    => $glance_user_password,
-    rabbit_password         => $rabbit_password,
-    rabbit_user             => $rabbit_user,
-    libvirt_type            => 'qemu',
-    floating_range          => $floating_network_range,
-    fixed_range             => $fixed_network_range,
-    verbose                 => $verbose,
-    auto_assign_floating_ip => $auto_assign_floating_ip,
+#    public_address          => $ipaddress_eth1,
+#    public_interface        => $public_interface,
+#    private_interface       => $private_interface,
+#    admin_email             => $admin_email,
+#    admin_password          => $admin_password,
+#    keystone_db_password    => $keystone_db_password,
+#    keystone_admin_token    => $keystone_admin_token,
+#    nova_db_password        => $nova_db_password,
+#    nova_user_password      => $nova_user_password,
+#    glance_db_password      => $glance_db_password,
+#    glance_user_password    => $glance_user_password,
+#    rabbit_password         => $rabbit_password,
+#    rabbit_user             => $rabbit_user,
+#    libvirt_type            => 'qemu',
+#    floating_range          => $floating_network_range,
+#    fixed_range             => $fixed_network_range,
+#    verbose                 => $verbose,
+#    auto_assign_floating_ip => $auto_assign_floating_ip,
   }
 
   class { 'openstack::auth_file':
@@ -81,103 +56,128 @@ node /mysql/ {
     keystone_db_password => 'keystone_password',
     glance_db_password   => 'glance_password',
     nova_db_password     => 'nova_password',
+    allowed_hosts        => ['keystone', 'glance', 'novacontroller', 'compute1', '%'],
   }
 
 }
 
 node /keystone/ {
 
-  class { 'keystone':
-    log_verbose    => true,
-    log_debug      => true,
-    sql_connection => 'mysql://keystone_admin:password@172.16.0.8/keystone',
-    catalog_type   => 'sql',
+  nova_config {
+    'DEFAULT/log_config': ensure => absent,
   }
-  class { 'keystone::roles::admin': }
+
+  class { 'openstack::keystone':
+    db_host               => '172.16.0.8',
+    db_password           => 'keystone_password',
+    admin_token           => 'service_token',
+    admin_email           => 'keystone@localhost',
+    admin_password        => 'ChangeMe',
+    glance_user_password  => 'glance_password',
+    nova_user_password    => 'nova_password',
+    public_address        => '172.16.0.7',
+    admin_tenant          => 'admin',
+    glance_public_address => '172.16.0.6',
+    nova_public_address   => '172.16.0.5',
+    verbose               => 'true',
+  }
 }
 
-node /controller/ {
+node /glance/ {
 
-# deploy a script that can be used to test nova
-class { 'openstack::test_file': }
-
-  $controller_node_address  = $ipaddress_eth1
-  $controller_node_public   = $controller_node_address
-  $controller_node_internal = $controller_node_address
-
-
-#  class { 'nova::volume': enabled => true }
-
-#  class { 'nova::volume::iscsi': }
-
-  class { 'openstack::controller':
-    public_address          => $controller_node_public,
-    public_interface        => $public_interface,
-    private_interface       => $private_interface,
-    internal_address        => $controller_node_internal,
-    floating_range          => $floating_network_range,
-    fixed_range             => $fixed_network_range,
-    # by default it does not enable multi-host mode
-    multi_host              => true,
-    # by default is assumes flat dhcp networking mode
-    network_manager         => 'nova.network.manager.FlatDHCPManager',
-    verbose                 => $verbose,
-    auto_assign_floating_ip => $auto_assign_floating_ip,
-    mysql_root_password     => $mysql_root_password,
-    admin_email             => $admin_email,
-    admin_password          => $admin_password,
-    keystone_db_password    => $keystone_db_password,
-    keystone_admin_token    => $keystone_admin_token,
-    glance_db_password      => $glance_db_password,
-    glance_user_password    => $glance_user_password,
-    nova_db_password        => $nova_db_password,
-    nova_user_password      => $nova_user_password,
-    rabbit_password         => $rabbit_password,
-    rabbit_user             => $rabbit_user,
-    export_resources        => false,
+  class { 'openstack::glance':
+    db_host               => '172.16.0.8',
+    glance_user_password  => 'glance_password',
+    glance_db_password    => 'glance_password',
+    keystone_host         => '172.16.0.7',
+    auth_uri              => "http://172.16.0.7:5000/",
+    verbose               => true,
   }
 
   class { 'openstack::auth_file':
-    admin_password       => $admin_password,
-    keystone_admin_token => $keystone_admin_token,
-    controller_node      => $controller_node_internal,
+    admin_password       => 'ChangeMe',
+    keystone_admin_token => 'service_token',
+    controller_node      => '172.16.0.7',
+    admin_tenant         => 'admin',
+  }
+}
+
+
+node /nova-controller/ {
+
+  # deploy a script that can be used to test nova
+  class { 'openstack::test_file': }
+
+#  class { 'nova::volume': enabled => true }
+#  class { 'nova::volume::iscsi': }
+
+  class { 'openstack::nova::controller':
+    public_address     => '172.16.0.5',
+    public_interface   => 'eth0',
+    private_interface  => 'eth1',
+    db_host            => '172.16.0.8',
+    rabbit_password    => 'changeme',
+    nova_user_password => 'nova_password',
+    nova_db_password   => 'nova_password',
+    network_manager    => 'nova.network.manager.FlatDHCPManager',
+    verbose            => 'True',
+    multi_host         => true,
+    glance_api_servers => '172.16.0.6:9292',
+    keystone_host      => '172.16.0.7',
+    #floating_range          => $floating_network_range,
+    #fixed_range             => $fixed_network_range,
   }
 
+  class { 'openstack::horizon':
+    secret_key            => 'dummy_secret_key',
+    cache_server_ip       => '127.0.0.1',
+    cache_server_port     => '11211',
+    swift                 => false,
+    quantum               => false,
+    horizon_app_links     => undef,
+    keystone_host         => '172.16.0.7',
+    keystone_default_role => 'Member',
+  }
+
+  class { 'openstack::auth_file':
+    admin_password       => 'ChangeMe',
+    keystone_admin_token => 'service_token',
+    controller_node      => '172.16.0.7',
+    admin_tenant         => 'admin',
+  }
 
 }
 
 node /compute/ {
 
-# deploy a script that can be used to test nova
-class { 'openstack::test_file': }
+  # deploy a script that can be used to test nova
+  class { 'openstack::test_file': }
 
   # External lookups.
-  $rabbit_connection_hash = collect_rabbit_connection('ipaddress_eth1', 'architecture=amd64')
-  $nova_db_addr = collect_nova_db_connection('ipaddress_eth1', 'architecture=amd64')
-  $vnc_proxy_addr = unique(query_nodes('Class[nova::vncproxy]', 'ipaddress_eth1'))
-  $glance_api_addr = unique(query_nodes('Class[glance::api]', 'ipaddress_eth1'))
+  # $rabbit_connection_hash = collect_rabbit_connection('ipaddress_eth1', 'architecture=amd64')
+  # $nova_db_addr = collect_nova_db_connection('ipaddress_eth1', 'architecture=amd64')
+  # $vnc_proxy_addr = unique(query_nodes('Class[nova::vncproxy]', 'ipaddress_eth1'))
+  # $glance_api_addr = unique(query_nodes('Class[glance::api]', 'ipaddress_eth1'))
 
   class { 'openstack::compute':
-    public_interface   => $public_interface,
-    private_interface  => $private_interface,
-    internal_address   => $ipaddress_eth1,
+    public_interface   => 'eth1',
+    private_interface  => 'eth0',
+    internal_address   => $::ipaddress_eth1,
     libvirt_type       => 'qemu',
-    fixed_range        => $fixed_network_range,
+    sql_connection     => 'mysql://nova:nova_password@172.16.0.8/nova',
+    fixed_range        => '10.0.0.0/24',
     network_manager    => 'nova.network.manager.FlatDHCPManager',
     multi_host         => true,
-    sql_connection     => $nova_db_addr,
-    nova_user_password => $nova_user_password,
-    rabbit_host        => $rabbit_connection_hash['host'],
-    rabbit_password    => $rabbit_password,
-    rabbit_user        => $rabbit_user,
-    glance_api_servers => ["${glance_api_addr}:9292"],
-    vncproxy_host      => $vnc_proxy_addr,
+    nova_user_password => 'nova_password',
+    rabbit_host        => '172.16.0.5',
+    rabbit_password    => 'changeme',
+    glance_api_servers => ["172.16.0.6:9292"],
+    vncproxy_host      => '172.16.0.5',
     vnc_enabled        => true,
-    verbose            => $verbose,
+    verbose            => true,
     manage_volumes     => true,
     nova_volume        => 'nova-volumes'
   }
-
 }
 
 node /devstack/ {
@@ -279,4 +279,8 @@ node /master/ {
     template => 'linux_deploy',
     tag      => ['pe']
   }
+}
+
+node default {
+  notify { $clientcert: }
 }

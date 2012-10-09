@@ -25,8 +25,13 @@ exec { '/usr/bin/apt-get update':
 #
 # specify a connection to the hardcoded puppet master
 #
-host { 'puppet':
-  ip => '172.16.0.2',
+host {
+  'puppet':         ip => '172.16.0.2';
+  'glance':         ip => '172.16.0.6';
+  'keystone':       ip => '172.16.0.7';
+  'mysql':          ip => '172.16.0.8';
+  'novacontroller': ip => '172.16.0.5';
+  'compute1':       ip => '172.16.0.4';
 }
 
 group { 'puppet':
@@ -36,3 +41,4 @@ group { 'puppet':
 # bring up the bridging interface explicitly
 #exec { '/sbin/ifconfig eth2 up': }
 
+node default { }
