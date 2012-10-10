@@ -1,31 +1,94 @@
-This is a puppet project used to develop on the openstack modules.
+# sharable openstack puppet dev environment
 
-It is currently being used to add folsom support.
+This project contains everything that you need to rebuild the
+same development environment that I built initilaly for the
+folsom implementation of the openstack puppet modules.
 
-All of the dependent modules can be installed by invoking
+# prereqs
 
-> librarian-puppet install
+1. Ensure that you have rake as well as rubygems installed
+
+This project uses vagrant to build out a virtualized testing environment.
+
+2. install vagraat and deps:
+
+rubygems should be installed
+
+vagrant should be installed
+
+    > gem install vagrant
+
+virtualbox should be installed
+
+3. It also uses librarian puppet to install all required modules.
+
+    > gem install librarian-puppet
+
+4. it is strongly recommended that you set up a proxy (like squid!) to speed up perforance
+of package installation.
+
+# project contents
+
+This project contains the following files
+
+Vagrantfile - used to specify the virtual machines that vagrant can use to
+spin up test openstack environments.
+
+Rakefile - stores tasks that can be used to build out openstack environments
+(these tasks have not been written yet)
+
+Puppetfile - used by librarian puppet to install the required modules
+
+manifests/hosts.pp
+
+stores basic host setup (apt setup, configured to use a proxy)
+
+manifests/site.pp
+
+
+# installing module deps
+
+    # cd in to the project directory
+    > librarian-puppet install
+
+# getting started
+
+Configure the hosts.pp file to point to your apt cache
+(or comment out the proxy host and port from the following resource)
+
+    class { 'apt':
+      proxy_host => '172.16.0.1',
+      proxy_port => '3128',
+    }
 
 Too see a list of the virtual machines that are managed by vagrant, run
 
-> vagrant status
+    > vagrant status
+    devstack                 not created
+    openstack_controller     not created
+    compute1                 not created
+    nova_controller          not created
+    glance                   not created
+    keystone                 not created
+    mysql                    not created
 
-The machines should be deployed in the following order:
+To see a list of all available rake tasks, run:
+(rake tasks have not yet been defined)
 
-1. mysql
-2. keystone
-3. glance
-4. nova_controller
-5. compute1
+    > rake -t
 
-current status:
+Deploy a controller and a compute node:
 
-mysql, keystone, glance currently work
+    > vagrant up openstack_controller
+    # wait until this finishes
+    > vagrant up compute1
+    # wait until this finishes
 
-nova_controller partially works (vnc does not work)
+Once these finish successfully, login to the controller:
 
-nova_network does not work
+    > vagrant ssh openstack_controller
 
-cinder and quantum are not supported yet
+Run the following test script:
 
-openstack::controller and openstack::all have not been tested yet.
+    [controller]# bash /tmp/test_nova.sh
+
