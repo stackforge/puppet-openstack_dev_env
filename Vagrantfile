@@ -18,6 +18,11 @@ Vagrant::Config.run do |config|
        'ip1'    => '172.16.0.2',
      }
    },
+   {'openstack_controller' =>
+     {'memory' => 2000,
+      'ip1'    => '172.16.0.3'
+     }
+   },
    {'compute1' =>
      {
        'memory' => 2512,
@@ -48,11 +53,6 @@ Vagrant::Config.run do |config|
        'ip1'    => '172.16.0.8'
      }
    #},
-   #{'controller' =>
-   #  {'memory' => 512,
-   #   'ip1'    => '172.16.0.3'
-   #  }
-   #},
    #{'compute_1'  =>
    #  {'ip1' => '172.16.0.4'}
    #},
@@ -72,10 +72,10 @@ Vagrant::Config.run do |config|
       agent.vm.forward_port(22, ssh_forward_port)
       # host only network
       agent.vm.network :hostonly, props['ip1'], :adapter => 2
+      agent.vm.network :hostonly, props['ip1'].gsub(/(\d+\.\d+)\.\d+\.(\d+)/) {|x| "#{$1}.1.#{$2}" }, :adapter => 3
       #agent.vm.customize ["modifyvm", :id, "--nicpromisc1", "allow-all"]
       # natted network
       #agent.vm.customize ["modifyvm", :id, "--nic3", "hostonly"]
-      #agent.vm.customize ["modifyvm", :id, "--hostonlyadapter3", host_network]
       #agent.vm.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
 
       #agent.vm.customize ["modifyvm", :id, "--macaddress2", 'auto']
