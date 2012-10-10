@@ -2,7 +2,13 @@
 # This puppet manifest is already applied first to do some environment specific things
 #
 
-apt::ppa {"ppa:openstack-ubuntu-testing/folsom-trunk-testing": }
+apt::source { 'openstack_folsom':
+  location          => "http://ubuntu-cloud.archive.canonical.com/ubuntu",
+  release           => "precise-updates/folsom",
+  repos             => "main",
+  required_packages => 'ubuntu-cloud-keyring',
+}
+
 #
 # configure apt to use my squid proxy
 # I highly recommend that anyone doing development on
@@ -18,7 +24,7 @@ class { 'apt':
 exec { '/usr/bin/apt-get update':
   require     => Class['apt'],
   refreshonly => true,
-  subscribe   => [Class['apt'], Apt::Ppa["ppa:openstack-ubuntu-testing/folsom-trunk-testing"]],
+  subscribe   => [Class['apt'], Apt::Source["openstack_folsom"]],
   logoutput   => true,
 }
 
@@ -26,12 +32,13 @@ exec { '/usr/bin/apt-get update':
 # specify a connection to the hardcoded puppet master
 #
 host {
-  'puppet':         ip => '172.16.0.2';
-  'glance':         ip => '172.16.0.6';
-  'keystone':       ip => '172.16.0.7';
-  'mysql':          ip => '172.16.0.8';
-  'novacontroller': ip => '172.16.0.5';
-  'compute1':       ip => '172.16.0.4';
+  'puppet':              ip => '172.16.0.2';
+  'openstackcontroller': ip => '172.16.0.3';
+  'compute1':            ip => '172.16.0.4';
+  'novacontroller':      ip => '172.16.0.5';
+  'glance':              ip => '172.16.0.6';
+  'keystone':            ip => '172.16.0.7';
+  'mysql':               ip => '172.16.0.8';
 }
 
 group { 'puppet':
