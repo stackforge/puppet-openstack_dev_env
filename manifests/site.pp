@@ -6,6 +6,10 @@
 
 ####### shared variables ##################
 
+Exec {
+  logoutput => true,
+}
+
 
 # this section is used to specify global variables that will
 # be used in the deployment of multi and single node openstack
@@ -102,6 +106,71 @@ node /glance/ {
   }
 }
 
+node /openstack-controller/ {
+
+  # deploy a script that can be used to test nova
+  class { 'openstack::test_file': }
+
+#  class { 'nova::volume': enabled => true }
+#  class { 'nova::volume::iscsi': }
+
+  class { 'openstack::controller':
+    #floating_range          => $floating_network_range,
+  # Required Network
+    public_address         => '172.16.0.3',
+    public_interface       => 'eth0',
+    private_interface      => 'eth2',
+  # Required Database
+    mysql_root_password    => 'root_password',
+  # Required Keystone
+    admin_email            => 'some_user@some_fake_email_address.foo',
+    admin_password         => 'ChangeMe',
+    keystone_db_password   => 'keystone_db_pass',
+    keystone_admin_token   => 'keystone_admin_token',
+  # Required Glance
+    glance_db_password     => 'glance_db_pass',
+    glance_user_password   => 'glance_user_pass',
+  # Required Nov a
+    nova_db_password       => 'nova_db_pass',
+    nova_user_password     => 'nova_user_pass',
+  # Required Horizon
+    secret_key             => 'dummy_secret_key',
+    network_manager        => 'nova.network.manager.FlatDHCPManager',
+    fixed_range            => '10.0.0.0/24',
+    floating_range         => '172.16.2.0/24',
+    create_networks        => true,
+    multi_host             => true,
+    db_host                => '127.0.0.1',
+    db_type                => 'mysql',
+    mysql_account_security => true,
+    # TODO - this should not allow all
+    allowed_hosts          => '%',
+    # Keystone
+    keystone_admin_tenant  => 'admin',
+    # Glance
+    glance_api_servers     => '127.0.0.1:9292',
+    purge_nova_config      => false,
+    rabbit_password        => 'rabbit_password',
+    # Horizon
+    cache_server_ip        => '127.0.0.1',
+    cache_server_port      => '11211',
+    swift                  => false,
+    quantum                => false,
+    horizon_app_links      => undef,
+    # Genera
+    verbose                => false,
+    export_resources       => false,
+  }
+
+  class { 'openstack::auth_file':
+    admin_password       => 'ChangeMe',
+    keystone_admin_token => 'service_token',
+    controller_node      => '127.0.0.1',
+    admin_tenant         => 'admin',
+  }
+}
+
+
 
 node /nova-controller/ {
 
@@ -113,8 +182,8 @@ node /nova-controller/ {
 
   class { 'openstack::nova::controller':
     public_address     => '172.16.0.5',
-    public_interface   => 'eth0',
-    private_interface  => 'eth1',
+    public_interface   => 'eth1',
+    private_interface  => 'eth2',
     db_host            => '172.16.0.8',
     rabbit_password    => 'changeme',
     nova_user_password => 'nova_password',
@@ -161,18 +230,18 @@ node /compute/ {
 
   class { 'openstack::compute':
     public_interface   => 'eth1',
-    private_interface  => 'eth0',
+    private_interface  => 'eth2',
     internal_address   => $::ipaddress_eth1,
     libvirt_type       => 'qemu',
-    sql_connection     => 'mysql://nova:nova_password@172.16.0.8/nova',
+    sql_connection     => 'mysql://nova:nova_db_pass@172.16.0.3/nova',
     fixed_range        => '10.0.0.0/24',
     network_manager    => 'nova.network.manager.FlatDHCPManager',
     multi_host         => true,
-    nova_user_password => 'nova_password',
-    rabbit_host        => '172.16.0.5',
-    rabbit_password    => 'changeme',
-    glance_api_servers => ["172.16.0.6:9292"],
-    vncproxy_host      => '172.16.0.5',
+    nova_user_password => 'nova_user_pass',
+    rabbit_host        => '172.16.0.3',
+    rabbit_password    => 'rabbit_password',
+    glance_api_servers => ["172.16.0.3:9292"],
+    vncproxy_host      => '172.16.0.3',
     vnc_enabled        => true,
     verbose            => true,
     manage_volumes     => true,
