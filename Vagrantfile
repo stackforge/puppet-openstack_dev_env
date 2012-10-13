@@ -52,7 +52,17 @@ Vagrant::Config.run do |config|
        'memory' => 512,
        'ip1'    => '172.16.0.8'
      }
-   #},
+   },
+   {'cinder' =>
+     {
+       'memory' => 512,
+       'ip1'    => '172.16.0.9'
+     }
+   },
+   { 'quantum_agent' => {
+       'memory' => 512,
+       'ip1'    => '172.16.0.10'
+     }
    #{'compute_1'  =>
    #  {'ip1' => '172.16.0.4'}
    #},
@@ -89,6 +99,7 @@ Vagrant::Config.run do |config|
       node_name = "#{name.gsub('_', '-')}-#{Time.now.strftime('%Y%m%d%m%s')}"
 
       agent.vm.provision :shell, :inline => "apt-get update"
+      #agent.vm.provision :shell, :inline => "apt-get -y upgrade"
 
       agent.vm.provision :puppet do |puppet|
         puppet.manifests_path = 'manifests'

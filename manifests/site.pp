@@ -60,6 +60,7 @@ node /mysql/ {
     keystone_db_password => 'keystone_password',
     glance_db_password   => 'glance_password',
     nova_db_password     => 'nova_password',
+    cinder_db_password   => 'cinder_password',
     allowed_hosts        => ['keystone', 'glance', 'novacontroller', 'compute1', '%'],
   }
 
@@ -67,7 +68,7 @@ node /mysql/ {
 
 node /keystone/ {
 
-  nova_config {
+  keystone_config {
     'DEFAULT/log_config': ensure => absent,
   }
 
@@ -79,6 +80,7 @@ node /keystone/ {
     admin_password        => 'ChangeMe',
     glance_user_password  => 'glance_password',
     nova_user_password    => 'nova_password',
+    cinder_user_password  => 'cinder_password',
     public_address        => '172.16.0.7',
     admin_tenant          => 'admin',
     glance_public_address => '172.16.0.6',
@@ -118,7 +120,7 @@ node /openstack-controller/ {
     #floating_range          => $floating_network_range,
   # Required Network
     public_address         => '172.16.0.3',
-    public_interface       => 'eth0',
+    public_interface       => 'eth1',
     private_interface      => 'eth2',
   # Required Database
     mysql_root_password    => 'root_password',
@@ -133,11 +135,18 @@ node /openstack-controller/ {
   # Required Nov a
     nova_db_password       => 'nova_db_pass',
     nova_user_password     => 'nova_user_pass',
+  # cinder
+    cinder_db_password     => 'cinder_db_pass',
+    cinder_user_password   => 'cinder_user_pass',
+  # quantum
+    quantum_db_password    => 'quantum_db_pass',
+    quantum_user_password  => 'quantum_user_pass',
   # Required Horizon
+
     secret_key             => 'dummy_secret_key',
     network_manager        => 'nova.network.manager.FlatDHCPManager',
     fixed_range            => '10.0.0.0/24',
-    floating_range         => '172.16.2.0/24',
+    floating_range         => '172.16.0.64/25',
     create_networks        => true,
     multi_host             => true,
     db_host                => '127.0.0.1',
@@ -151,6 +160,7 @@ node /openstack-controller/ {
     glance_api_servers     => '127.0.0.1:9292',
     purge_nova_config      => false,
     rabbit_password        => 'rabbit_password',
+    rabbit_user            => 'nova',
     # Horizon
     cache_server_ip        => '127.0.0.1',
     cache_server_port      => '11211',
@@ -158,8 +168,43 @@ node /openstack-controller/ {
     quantum                => false,
     horizon_app_links      => undef,
     # Genera
-    verbose                => false,
+    verbose                => 'True',
     export_resources       => false,
+  }
+
+#  # set up a quantum server
+  class { 'quantum':
+    rabbit_user     => 'nova',
+    rabbit_password => 'rabbit_password',
+    sql_connection  => "mysql://quantum:quantum_db_pass@localhost/quantum?charset=utf8",
+  }
+
+  class { 'quantum::server':
+    keystone_password => 'quantum_user_pass',
+  }
+
+  class { 'quantum::plugins::ovs':
+    sql_connection      => "mysql://quantum:quantum_db_pass@localhost/quantum?charset=utf8",
+    tenant_network_type => 'gre',
+    # I need to know what this does...
+    local_ip            => '10.0.0.1',
+  }
+
+  class { 'nova::network::quantum':
+  #$fixed_range,
+    quantum_admin_password    => 'quantum_user_pass',
+  #$use_dhcp                  = 'True',
+  #$public_interface          = undef,
+    quantum_connection_host   => 'localhost',
+    quantum_auth_strategy     => 'keystone',
+    quantum_url               => 'http://172.16.0.3:9696',
+    quantum_admin_tenant_name => 'services',
+    quantum_admin_username    => 'quantum',
+    quantum_admin_auth_url    => 'http://172.16.0.3:35357/v2.0'
+  }
+
+  package { 'python-cliff':
+    ensure => present,
   }
 
   class { 'openstack::auth_file':
@@ -168,7 +213,28 @@ node /openstack-controller/ {
     controller_node      => '127.0.0.1',
     admin_tenant         => 'admin',
   }
+
+  keystone_config {
+    'DEFAULT/log_config': ensure => absent,
+  }
 }
+
+node /cinder/ {
+
+
+  class { 'cinder':
+    rabbit_password => 'rabbit_password',
+    rabbit_host     => '172.16.0.3',
+    sql_connection  => 'mysql://cinder:cinder_db_pass@172.16.0.3/cinder?charset=utf8',
+    verbose         => 'True',
+  }
+
+  class { 'cinder::volume': }
+
+  class { 'cinder::volume::iscsi': }
+
+}
+
 
 
 
@@ -219,6 +285,16 @@ node /nova-controller/ {
 
 node /compute/ {
 
+  file_line { 'quemu_hack':
+    line => 'cgroup_device_acl = [
+   "/dev/null", "/dev/full", "/dev/zero",
+   "/dev/random", "/dev/urandom",
+   "/dev/ptmx", "/dev/kvm", "/dev/kqemu",
+   "/dev/rtc", "/dev/hpet", "/dev/net/tun",]',
+    path   => '/etc/libvirt/qemu.conf',
+    ensure => present,
+  } ~> Service['libvirt']
+
   # deploy a script that can be used to test nova
   class { 'openstack::test_file': }
 
@@ -229,14 +305,11 @@ node /compute/ {
   # $glance_api_addr = unique(query_nodes('Class[glance::api]', 'ipaddress_eth1'))
 
   class { 'openstack::compute':
-    public_interface   => 'eth1',
-    private_interface  => 'eth2',
     internal_address   => $::ipaddress_eth1,
     libvirt_type       => 'qemu',
     sql_connection     => 'mysql://nova:nova_db_pass@172.16.0.3/nova',
-    fixed_range        => '10.0.0.0/24',
-    network_manager    => 'nova.network.manager.FlatDHCPManager',
-    multi_host         => true,
+    network_manager    => 'nova.network.quantum.manager.QuantumManager',
+    #multi_host         => true,
     nova_user_password => 'nova_user_pass',
     rabbit_host        => '172.16.0.3',
     rabbit_password    => 'rabbit_password',
@@ -244,9 +317,59 @@ node /compute/ {
     vncproxy_host      => '172.16.0.3',
     vnc_enabled        => true,
     verbose            => true,
-    manage_volumes     => true,
-    nova_volume        => 'nova-volumes'
   }
+
+  class { 'openstack::cinder':
+    sql_connection     => 'mysql://cinder:cinder_db_pass@172.16.0.3/cinder',
+    rabbit_host        => '172.16.0.3',
+    rabbit_password    => 'rabbit_password',
+    volume_group       => 'precise64',
+  }
+
+  # manual steps
+  # apt-get update
+  # apt-get upgrade
+  # apt-get -y install linux-headers-3.2.0-23-generic
+  # apt-get -y install quantum-plugin-openvswitch-agent
+  # apt-get -y install openvswitch-datapath-dkms-source
+  # module-assistant auto-install openvswitch-datapath
+  # service openvswitch-switch restart
+
+  class { 'quantum':
+    verbose         => 'True',
+    debug           => 'True',
+    rabbit_host     => '172.16.0.3',
+    rabbit_user     => 'nova',
+    rabbit_password => 'rabbit_password',
+    sql_connection  => "mysql://quantum:quantum_db_pass@172.16.0.3/quantum?charset=utf8",
+  }
+
+  class { 'quantum::agents::ovs':
+    bridge_uplinks => ['br-virtual:eth2'],
+  }
+
+  class { 'quantum::agents::dhcp': }
+
+  class { 'nova::compute::quantum': }
+
+  class { 'nova::network::quantum':
+  #$fixed_range,
+    quantum_admin_password    => 'quantum_user_pass',
+  #$use_dhcp                  = 'True',
+  #$public_interface          = undef,
+    quantum_connection_host   => 'localhost',
+    quantum_auth_strategy     => 'keystone',
+    quantum_url               => 'http://172.16.0.3:9696',
+    quantum_admin_tenant_name => 'services',
+    quantum_admin_username    => 'quantum',
+    quantum_admin_auth_url    => 'http://172.16.0.3:35357/v2.0'
+  }
+
+  nova_config {
+    'linuxnet_interface_driver':       value => 'nova.network.linux_net.LinuxOVSInterfaceDriver';
+    'linuxnet_ovs_integration_bridge': value => 'br-int';
+  }
+
 }
 
 node /devstack/ {
