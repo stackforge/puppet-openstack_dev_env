@@ -8,9 +8,9 @@ mod 'puppetlabs/horizon', :git => 'git://github.com/bodepd/puppetlabs-horizon', 
 mod 'puppetlabs/swift', :git => 'git://github.com/puppetlabs/puppetlabs-swift'
 mod 'bodepd/devstack', :git => 'git://github.com/bodepd/puppetlabs-devstack'
 mod 'puppet/cinder', :git => 'git://github.com/bodepd/puppet-cinder'
-mod 'puppet/quantum', :git => 'git://github.com/EmilienM/openstack-quantum-puppet/'
+mod 'puppet/quantum', :git => 'git://github.com/bodepd/openstack-quantum-puppet/', :ref => 'folsom'
 # openstack middleware
-mod 'puppet-vswitch', :git => 'https://github.com/ekarlso/puppet-vswitch'
+mod 'puppet/vswitch', :git => 'git://github.com/bodepd/puppet-vswitch'
 mod 'puppetlabs/rabbitmq', :git => 'git://github.com/puppetlabs/puppetlabs-rabbitmq'
 mod 'puppetlabs/mysql', :git => 'git://github.com/puppetlabs/puppetlabs-mysql'
 mod 'puppetlabs/git', :git => 'git://github.com/puppetlabs/puppetlabs-git'

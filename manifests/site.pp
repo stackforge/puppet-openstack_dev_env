@@ -1,5 +1,5 @@
-#
-# This document serves as an example of how to deploy
+
+## This document serves as an example of how to deploy
 # basic single and multi-node openstack environments.
 #
 
