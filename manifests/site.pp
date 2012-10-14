@@ -358,7 +358,7 @@ node /compute/ {
     quantum_admin_password    => 'quantum_user_pass',
   #$use_dhcp                  = 'True',
   #$public_interface          = undef,
-    quantum_connection_host   => 'localhost',
+    quantum_connection_host   => '172.16.0.3',
     quantum_auth_strategy     => 'keystone',
     quantum_url               => 'http://172.16.0.3:9696',
     quantum_admin_tenant_name => 'services',
