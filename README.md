@@ -8,11 +8,7 @@ folsom implementation of the openstack puppet modules.
 
 1. Ensure that you have rake as well as rubygems installed
 
-This project uses vagrant to build out a virtualized testing environment.
-
-2. install vagraat and deps:
-
-rubygems should be installed
+2. install vagranat and dependencies:
 
 vagrant should be installed
 
@@ -20,7 +16,7 @@ vagrant should be installed
 
 virtualbox should be installed
 
-3. It also uses librarian puppet to install all required modules.
+3. Install librarian-puppet.
 
     > gem install librarian-puppet
 
@@ -35,7 +31,6 @@ Vagrantfile - used to specify the virtual machines that vagrant can use to
 spin up test openstack environments.
 
 Rakefile - stores tasks that can be used to build out openstack environments
-(these tasks have not been written yet)
 
 Puppetfile - used by librarian puppet to install the required modules
 
@@ -44,7 +39,6 @@ manifests/hosts.pp
 stores basic host setup (apt setup, configured to use a proxy)
 
 manifests/site.pp
-
 
 # installing module deps
 
