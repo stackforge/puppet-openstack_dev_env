@@ -285,6 +285,7 @@ node /nova-controller/ {
 
 node /compute/ {
 
+  Package['libvirt'] ->
   file_line { 'quemu_hack':
     line => 'cgroup_device_acl = [
    "/dev/null", "/dev/full", "/dev/zero",
