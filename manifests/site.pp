@@ -309,7 +309,6 @@ node /compute/ {
     internal_address   => $::ipaddress_eth1,
     libvirt_type       => 'qemu',
     sql_connection     => 'mysql://nova:nova_db_pass@172.16.0.3/nova',
-    network_manager    => 'nova.network.quantum.manager.QuantumManager',
     #multi_host         => true,
     nova_user_password => 'nova_user_pass',
     rabbit_host        => '172.16.0.3',
