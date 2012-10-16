@@ -117,6 +117,8 @@ node /openstack-controller/ {
 #  class { 'nova::volume': enabled => true }
 #  class { 'nova::volume::iscsi': }
 
+  include apache
+
   class { 'openstack::controller':
     #floating_range          => $floating_network_range,
   # Required Network
@@ -165,7 +167,7 @@ node /openstack-controller/ {
     cache_server_ip        => '127.0.0.1',
     cache_server_port      => '11211',
     swift                  => false,
-    quantum                => false,
+    quantum                => true,
     horizon_app_links      => undef,
     # Genera
     verbose                => $verbose,

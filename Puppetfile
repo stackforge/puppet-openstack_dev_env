@@ -17,6 +17,7 @@ mod 'puppetlabs/git', :git => 'git://github.com/puppetlabs/puppetlabs-git'
 mod 'puppetlabs/vcsrepo', :git => 'git://github.com/puppetlabs/puppetlabs-vcsrepo'
 mod 'saz/memcached', :git => 'git://github.com/saz/puppet-memcached'
 mod 'puppetlabs/rsync', :git => 'git://github.com/puppetlabs/puppetlabs-rsync'
+mod 'puppetlabs/apache', :git => 'git://github.com/puppetlabs/puppetlabs-apache'
 # other deps
 mod 'puppetlabs/xinetd', :git => 'git://github.com/puppetlabs/puppetlabs-xinetd'
 mod 'saz/ssh', :git => 'git://github.com/saz/puppet-ssh'
