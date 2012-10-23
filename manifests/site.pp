@@ -129,7 +129,7 @@ node /controller/ {
     # need to sort out networking...
     network_manager        => 'nova.network.manager.FlatDHCPManager',
     fixed_range            => '10.0.0.0/24',
-    floating_range         => '172.16.5.64/25',
+    floating_range         => '172.16.5.192/26',
     create_networks        => true,
     multi_host             => true,
     # not supported for essex
