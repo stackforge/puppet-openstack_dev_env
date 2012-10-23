@@ -9,65 +9,65 @@ Vagrant::Config.run do |config|
     gui_mode = true
   end
 
-  ssh_forward_port = 2244
+  ssh_forward_port = 2444
 
   [
    {'devstack' =>
      {
        'memory' => 512,
-       'ip1'    => '172.16.0.2',
+       'ip1'    => '172.16.5.2',
      }
    },
    {'openstack_controller' =>
      {'memory' => 2000,
-      'ip1'    => '172.16.0.3'
+      'ip1'    => '172.16.5.3'
      }
    },
    {'compute1' =>
      {
        'memory' => 2512,
-       'ip1'    => '172.16.0.4'
+       'ip1'    => '172.16.5.4'
      }
    },
    {'nova_controller' =>
      {
        'memory' => 512,
-       'ip1'    => '172.16.0.5'
+       'ip1'    => '172.16.5.5'
      }
    },
    {'glance' =>
      {
        'memory' => 512,
-       'ip1'    => '172.16.0.6'
+       'ip1'    => '172.16.5.6'
      }
    },
    {'keystone' =>
      {
        'memory' => 512,
-       'ip1'    => '172.16.0.7'
+       'ip1'    => '172.16.5.7'
      }
    },
    {'mysql' =>
      {
        'memory' => 512,
-       'ip1'    => '172.16.0.8'
+       'ip1'    => '172.16.5.8'
      }
    },
    {'cinder' =>
      {
        'memory' => 512,
-       'ip1'    => '172.16.0.9'
+       'ip1'    => '172.16.5.9'
      }
    },
    { 'quantum_agent' => {
        'memory' => 512,
-       'ip1'    => '172.16.0.10'
+       'ip1'    => '172.16.5.10'
      }
    #{'compute_1'  =>
-   #  {'ip1' => '172.16.0.4'}
+   #  {'ip1' => '172.16.5.4'}
    #},
    #{'compute_2'  =>
-   #  {'ip1' => '172.16.0.5'}
+   #  {'ip1' => '172.16.5.5'}
    }
   ].each do |hash|
 
@@ -77,7 +77,7 @@ Vagrant::Config.run do |config|
 
     raise "Malformed vhost hash" if hash.size > 1
 
-    config.vm.define name.intern do |agent|
+    config.vm.define "#{name}-essex".intern do |agent|
       ssh_forward_port = ssh_forward_port + 1
       agent.vm.forward_port(22, ssh_forward_port)
       # host only network
