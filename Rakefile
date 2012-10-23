@@ -4,14 +4,14 @@ require 'vagrant'
 
 env = Vagrant::Environment.new(:cwd => File.dirname(__FILE__), :ui_class => Vagrant::UI::Colored)
 
-def system (cmd)
+def cmd_system (cmd)
   result = system cmd
   raise(RuntimeError, $?) unless $?.success?
   result
 end
 
 def on_box (box, cmd)
-  system("vagrant ssh #{box} -c '#{cmd}'")
+  cmd_system("vagrant ssh #{box} -c '#{cmd}'")
 end
 
 # bring vagrant vm with image name up
@@ -38,7 +38,7 @@ namespace :openstack do
 
   desc 'clone all required modules'
   task :setup do
-    system('librarian-puppet install')
+    cmd_system('librarian-puppet install')
   end
 
   task 'destroy' do
