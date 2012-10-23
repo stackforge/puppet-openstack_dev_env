@@ -18,7 +18,7 @@ Vagrant::Config.run do |config|
        'ip1'    => '172.16.5.2',
      }
    },
-   {'openstack_controller' =>
+   {'controller' =>
      {'memory' => 2000,
       'ip1'    => '172.16.5.3'
      }
@@ -77,7 +77,7 @@ Vagrant::Config.run do |config|
 
     raise "Malformed vhost hash" if hash.size > 1
 
-    config.vm.define "#{name}-essex".intern do |agent|
+    config.vm.define "#{name}_essex".intern do |agent|
       ssh_forward_port = ssh_forward_port + 1
       agent.vm.forward_port(22, ssh_forward_port)
       # host only network

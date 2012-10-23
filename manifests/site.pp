@@ -95,7 +95,7 @@ node /glance/ {
   }
 }
 
-node /openstack-controller/ {
+node /controller/ {
 
   # deploy a script that can be used to test nova
   class { 'openstack::test_file': }

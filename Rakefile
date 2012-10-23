@@ -52,8 +52,8 @@ namespace :openstack do
   task :deploy_two_node do
     require 'vagrant'
     env = Vagrant::Environment.new(:cwd => File.dirname(__FILE__), :ui_class => Vagrant::UI::Colored)
-    build(:openstack_controller, env)
-    build(:compute1, env)
+    build(:controller_essex, env)
+    build(:compute1_essex, env)
   end
 
 end
