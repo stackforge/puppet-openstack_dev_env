@@ -172,7 +172,6 @@ node /openstack-controller/ {
     # Genera
     verbose                => $verbose,
     purge_nova_config      => false,
-    export_resources       => false,
   }
 
 #  # set up a quantum server
