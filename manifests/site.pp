@@ -141,6 +141,7 @@ node /openstack-controller/ {
   # cinder
     cinder_db_password     => $cinder_db_password,
     cinder_user_password   => $cinder_user_password,
+    cinder                 => true,
   # quantum
     quantum_db_password    => $quantum_db_password,
     quantum_user_password  => $quantum_user_password,
