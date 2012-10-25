@@ -308,25 +308,18 @@ node /compute/ {
   # $glance_api_addr = unique(query_nodes('Class[glance::api]', 'ipaddress_eth1'))
 
   class { 'openstack::compute':
-    internal_address   => $::ipaddress_eth1,
-    libvirt_type       => $libvirt_type,
-    sql_connection     => "mysql://nova:${nova_db_password}@${openstack_controller}/nova",
+    internal_address      => $::ipaddress_eth1,
+    libvirt_type          => $libvirt_type,
+    sql_connection        => "mysql://nova:${nova_db_password}@${openstack_controller}/nova",
+    cinder_sql_connection => "mysql://cinder:${cinder_db_password}@${openstack_controller}/cinder",
     #multi_host         => true,
-    nova_user_password => $nova_user_password,
-    rabbit_host        => $openstack_controller,
-    rabbit_password    => $rabbit_password,
-    glance_api_servers => ["${openstack_controller}:9292"],
-    vncproxy_host      => $openstack_controller,
-    vnc_enabled        => true,
-    verbose            => $verbose,
-  }
-
-  class { 'openstack::cinder':
-    sql_connection     => "mysql://cinder:${cinder_db_password}@${openstack_controller}/cinder",
-    rabbit_host        => $openstack_controller,
-    # TODO where is rabbit host?
-    rabbit_password    => $rabbit_password,
-    volume_group       => 'precise64',
+    nova_user_password    => $nova_user_password,
+    rabbit_host           => $openstack_controller,
+    rabbit_password       => $rabbit_password,
+    glance_api_servers    => ["${openstack_controller}:9292"],
+    vncproxy_host         => $openstack_controller,
+    vnc_enabled           => true,
+    verbose               => $verbose,
   }
 
   # manual steps
