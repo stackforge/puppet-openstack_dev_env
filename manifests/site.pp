@@ -308,6 +308,13 @@ node /compute/ {
   # $vnc_proxy_addr = unique(query_nodes('Class[nova::vncproxy]', 'ipaddress_eth1'))
   # $glance_api_addr = unique(query_nodes('Class[glance::api]', 'ipaddress_eth1'))
 
+  #
+  # This is just for testing. It creates a loopback interface
+  # that can be mounted by cinder. In real deployments, you should
+  # partition your physical disks to have volume groups.
+  #
+  class { 'cinder::setup_test_volume': } -> Service<||>
+
   class { 'openstack::compute':
     internal_address      => $::ipaddress_eth1,
     libvirt_type          => $libvirt_type,
