@@ -45,6 +45,7 @@ $network_type      = 'quantum'
 #$network_type      = 'nova'
 if $network_type == 'nova' {
   $use_quantum = false
+  $multi_host  = true
 } else {
   $use_quamtum = true
 }
@@ -55,6 +56,7 @@ $floating_network_range  = '172.16.0.128/25'
 $auto_assign_floating_ip = false
 
 #### end shared variables #################
+
 #### controller/compute mode settings ####
 $openstack_controller = '172.16.0.3'
 #### controller/compute mode settings ####
@@ -100,15 +102,14 @@ node /openstack-controller/ {
     quantum                => $use_quantum,
     quantum_db_password    => $quantum_db_password,
     quantum_user_password  => $quantum_user_password,
-  # Required Horizon
-
+  # horizon
     secret_key             => $secret_key,
     # need to sort out networking...
     network_manager        => 'nova.network.manager.FlatDHCPManager',
     fixed_range            => $fixed_network_range,
     floating_range         => $floating_network_range,
     create_networks        => true,
-    multi_host             => true,
+    multi_host             => $multi_host,
     db_host                => '127.0.0.1',
     db_type                => 'mysql',
     mysql_account_security => true,
@@ -124,7 +125,7 @@ node /openstack-controller/ {
     cache_server_port      => '11211',
     swift                  => false,
     horizon_app_links      => undef,
-    # Genera
+    # General
     verbose                => $verbose,
     purge_nova_config      => false,
   }
@@ -161,17 +162,6 @@ node /compute/ {
     } ~> Service['libvirt']
   }
 
-  # External lookups.
-  # $rabbit_connection_hash = collect_rabbit_connection('ipaddress_eth1', 'architecture=amd64')
-  # $nova_db_addr = collect_nova_db_connection('ipaddress_eth1', 'architecture=amd64')
-  # $vnc_proxy_addr = unique(query_nodes('Class[nova::vncproxy]', 'ipaddress_eth1'))
-  # $glance_api_addr = unique(query_nodes('Class[glance::api]', 'ipaddress_eth1'))
-
-  #
-  # This is just for testing. It creates a loopback interface
-  # that can be mounted by cinder. In real deployments, you should
-  # partition your physical disks to have volume groups.
-  #
   class { 'cinder::setup_test_volume': } -> Service<||>
 
   class { 'openstack::compute':
@@ -182,13 +172,15 @@ node /compute/ {
     sql_connection         => "mysql://nova:${nova_db_password}@${openstack_controller}/nova",
     cinder_sql_connection  => "mysql://cinder:${cinder_db_password}@${openstack_controller}/cinder",
     quantum_sql_connection => "mysql://quantum:${quantum_db_password}@${openstack_controller}/quantum?charset=utf8",
-    multi_host             => true,
+    multi_host             => $multi_host,
+    fixed_range            => $fixed_network_range,
     nova_user_password     => $nova_user_password,
+    quantum                => $use_quantum,
+    quantum_host           => $openstack_controller,
     quantum_user_password  => $quantum_user_password,
     rabbit_password        => $rabbit_password,
     glance_api_servers     => ["${openstack_controller}:9292"],
     rabbit_host            => $openstack_controller,
-    quantum_host           => $openstack_controller,
     keystone_host          => $openstack_controller,
     vncproxy_host          => $openstack_controller,
     vnc_enabled            => true,
