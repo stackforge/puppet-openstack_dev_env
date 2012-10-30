@@ -45,6 +45,7 @@ $network_type      = 'quantum'
 #$network_type      = 'nova'
 if $network_type == 'nova' {
   $use_quantum = false
+  $multi_host  = true
 } else {
   $use_quamtum = true
 }
@@ -55,6 +56,7 @@ $floating_network_range  = '172.16.0.128/25'
 $auto_assign_floating_ip = false
 
 #### end shared variables #################
+
 #### controller/compute mode settings ####
 $openstack_controller = '172.16.0.3'
 #### controller/compute mode settings ####
@@ -108,7 +110,7 @@ node /openstack-controller/ {
     fixed_range            => $fixed_network_range,
     floating_range         => $floating_network_range,
     create_networks        => true,
-    multi_host             => true,
+    multi_host             => $multi_host,
     db_host                => '127.0.0.1',
     db_type                => 'mysql',
     mysql_account_security => true,
@@ -182,7 +184,7 @@ node /compute/ {
     sql_connection         => "mysql://nova:${nova_db_password}@${openstack_controller}/nova",
     cinder_sql_connection  => "mysql://cinder:${cinder_db_password}@${openstack_controller}/cinder",
     quantum_sql_connection => "mysql://quantum:${quantum_db_password}@${openstack_controller}/quantum?charset=utf8",
-    multi_host             => true,
+    multi_host             => $multi_host,
     nova_user_password     => $nova_user_password,
     quantum_user_password  => $quantum_user_password,
     rabbit_password        => $rabbit_password,
