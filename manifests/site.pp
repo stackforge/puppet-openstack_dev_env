@@ -18,7 +18,7 @@ $nova_db_password     = 'nova_db_password'
 $cinder_db_password   = 'cinder_db_password'
 $quantum_db_password  = 'quantum_db_password'
 
-$allowed_hosts        = ['keystone', 'glance', 'novacontroller', 'compute1', '%']
+$allowed_hosts        = ['%']
 
 # keystone settings
 $admin_token           = 'service_token'
@@ -31,23 +31,30 @@ $quantum_user_password = 'quantum_user_password'
 
 $verbose = 'True'
 
-$public_interface = 'eth1'
+$public_interface  = 'eth1'
 $private_interface = 'eth2'
 
-$rabbit_password = 'rabbit_password'
-$rabbit_user     = 'nova'
+$rabbit_password   = 'rabbit_password'
+$rabbit_user       = 'nova'
 
-$secret_key      = 'secret_key'
+$secret_key        = 'secret_key'
 
-$libvirt_type = 'qemu'
+$libvirt_type      = 'qemu'
+#$libvirt_type = 'kvm'
+$network_type      = 'quantum'
+#$network_type      = 'nova'
+if $network_type == 'nova' {
+  $use_quantum = false
+} else {
+  $use_quamtum = true
+}
+
+$fixed_network_range     = '10.0.0.0/24'
+$floating_network_range  = '172.16.0.128/25'
+
+$auto_assign_floating_ip = false
 
 #### end shared variables #################
-
-#### controller/compute mode settings ####
-$mysql_host    = '172.16.0.8'
-$keystone_host = '172.16.0.7'
-$glance_host   = '172.16.0.6'
-$nova_host     = '172.16.0.5'
 #### controller/compute mode settings ####
 $openstack_controller = '172.16.0.3'
 #### controller/compute mode settings ####
@@ -60,10 +67,6 @@ import 'scenarios/multi_role.pp'
 node /openstack-controller/ {
 
   # deploy a script that can be used to test nova
-  class { 'openstack::test_file': }
-
-#  class { 'nova::volume': enabled => true }
-#  class { 'nova::volume::iscsi': }
   class { 'openstack::test_file':
     quantum => $use_quantum,
   }
@@ -144,19 +147,19 @@ node /openstack-controller/ {
 node /compute/ {
 
   # TODO not sure why this is required
-  Package['libvirt'] ->
-  file_line { 'quemu_hack':
-    line => 'cgroup_device_acl = [
-   "/dev/null", "/dev/full", "/dev/zero",
-   "/dev/random", "/dev/urandom",
-   "/dev/ptmx", "/dev/kvm", "/dev/kqemu",
-   "/dev/rtc", "/dev/hpet", "/dev/net/tun",]',
-    path   => '/etc/libvirt/qemu.conf',
-    ensure => present,
-  } ~> Service['libvirt']
-
-  # deploy a script that can be used to test nova
-  class { 'openstack::test_file': }
+  # this has a bug, and is constantly added to the file
+  if $libvirt_type == 'qemu' {
+    Package['libvirt'] ->
+    file_line { 'quemu_hack':
+      line => 'cgroup_device_acl = [
+     "/dev/null", "/dev/full", "/dev/zero",
+     "/dev/random", "/dev/urandom",
+     "/dev/ptmx", "/dev/kvm", "/dev/kqemu",
+     "/dev/rtc", "/dev/hpet", "/dev/net/tun",]',
+      path   => '/etc/libvirt/qemu.conf',
+      ensure => present,
+    } ~> Service['libvirt']
+  }
 
   # External lookups.
   # $rabbit_connection_hash = collect_rabbit_connection('ipaddress_eth1', 'architecture=amd64')
