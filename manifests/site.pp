@@ -52,6 +52,10 @@ $nova_host     = '172.16.0.5'
 $openstack_controller = '172.16.0.3'
 #### controller/compute mode settings ####
 
+# node declaration for all in one
+import 'scenarios/all_in_one.pp'
+# node declarations for a single server per role
+import 'scenarios/multi_role.pp'
 
 node /openstack-controller/ {
 
@@ -60,6 +64,9 @@ node /openstack-controller/ {
 
 #  class { 'nova::volume': enabled => true }
 #  class { 'nova::volume::iscsi': }
+  class { 'openstack::test_file':
+    quantum => $use_quantum,
+  }
 
   include apache
 
@@ -87,6 +94,7 @@ node /openstack-controller/ {
     cinder_user_password   => $cinder_user_password,
     cinder                 => true,
   # quantum
+    quantum                => $use_quantum,
     quantum_db_password    => $quantum_db_password,
     quantum_user_password  => $quantum_user_password,
   # Required Horizon
@@ -94,8 +102,8 @@ node /openstack-controller/ {
     secret_key             => $secret_key,
     # need to sort out networking...
     network_manager        => 'nova.network.manager.FlatDHCPManager',
-    fixed_range            => '10.0.0.0/24',
-    floating_range         => '172.16.0.64/25',
+    fixed_range            => $fixed_network_range,
+    floating_range         => $floating_network_range,
     create_networks        => true,
     multi_host             => true,
     db_host                => '127.0.0.1',
@@ -112,42 +120,10 @@ node /openstack-controller/ {
     cache_server_ip        => '127.0.0.1',
     cache_server_port      => '11211',
     swift                  => false,
-    quantum                => true,
     horizon_app_links      => undef,
     # Genera
     verbose                => $verbose,
     purge_nova_config      => false,
-  }
-
-#  # set up a quantum server
-  class { 'quantum':
-    rabbit_user     => $rabbit_user,
-    rabbit_password => $rabbit_password,
-    sql_connection  => "mysql://quantum:${quantum_db_password}@localhost/quantum?charset=utf8",
-  }
-
-  class { 'quantum::server':
-    keystone_password => $quantum_user_password,
-  }
-
-  class { 'quantum::plugins::ovs':
-    sql_connection      => "mysql://quantum:${quantum_db_password}@localhost/quantum?charset=utf8",
-    tenant_network_type => 'gre',
-    # I need to know what this does...
-    local_ip            => '10.0.0.1',
-  }
-
-  class { 'nova::network::quantum':
-  #$fixed_range,
-    quantum_admin_password    => $quantum_user_password,
-  #$use_dhcp                  = 'True',
-  #$public_interface          = undef,
-    quantum_connection_host   => 'localhost',
-    quantum_auth_strategy     => 'keystone',
-    quantum_url               => "http://${openstack_controller}:9696",
-    quantum_admin_tenant_name => 'services',
-    #quantum_admin_username    => 'quantum',
-    quantum_admin_auth_url    => "http://${openstack_controller}:35357/v2.0",
   }
 
   package { 'python-cliff':
@@ -196,62 +172,24 @@ node /compute/ {
   class { 'cinder::setup_test_volume': } -> Service<||>
 
   class { 'openstack::compute':
-    internal_address      => $::ipaddress_eth1,
-    libvirt_type          => $libvirt_type,
-    sql_connection        => "mysql://nova:${nova_db_password}@${openstack_controller}/nova",
-    cinder_sql_connection => "mysql://cinder:${cinder_db_password}@${openstack_controller}/cinder",
-    #multi_host         => true,
-    nova_user_password    => $nova_user_password,
-    rabbit_host           => $openstack_controller,
-    rabbit_password       => $rabbit_password,
-    glance_api_servers    => ["${openstack_controller}:9292"],
-    vncproxy_host         => $openstack_controller,
-    vnc_enabled           => true,
-    verbose               => $verbose,
-  }
-
-  # manual steps
-  # apt-get update
-  # apt-get upgrade
-  # apt-get -y install linux-headers-3.2.0-23-generic
-  # apt-get -y install quantum-plugin-openvswitch-agent
-  # apt-get -y install openvswitch-datapath-dkms-source
-  # module-assistant auto-install openvswitch-datapath
-  # service openvswitch-switch restart
-
-  class { 'quantum':
-    verbose         => $verbose,
-    debug           => $verbose,
-    rabbit_host     => $openstack_controller,
-    rabbit_user     => $rabbit_user,
-    rabbit_password => $rabbit_password,
-    sql_connection  => "mysql://quantum:${quantum_db_password}@${openstack_controller}/quantum?charset=utf8",
-  }
-
-  class { 'quantum::agents::ovs':
-    bridge_uplinks => ['br-virtual:eth2'],
-  }
-
-  class { 'quantum::agents::dhcp': }
-
-  class { 'nova::compute::quantum': }
-
-  class { 'nova::network::quantum':
-  #$fixed_range,
-    quantum_admin_password    => $quantum_user_password,
-  #$use_dhcp                  = 'True',
-  #$public_interface          = undef,
-    quantum_connection_host   => $openstack_controller,
-    #quantum_auth_strategy     => 'keystone',
-    quantum_url               => "http://${openstack_controller}:9696",
-    quantum_admin_tenant_name => 'services',
-    #quantum_admin_username    => 'quantum',
-    quantum_admin_auth_url    => "http://${openstack_controller}:35357/v2.0"
-  }
-
-  nova_config {
-    'linuxnet_interface_driver':       value => 'nova.network.linux_net.LinuxOVSInterfaceDriver';
-    'linuxnet_ovs_integration_bridge': value => 'br-int';
+    public_interface       => $public_interface,
+    private_interface      => $private_interface,
+    internal_address       => $::ipaddress_eth1,
+    libvirt_type           => $libvirt_type,
+    sql_connection         => "mysql://nova:${nova_db_password}@${openstack_controller}/nova",
+    cinder_sql_connection  => "mysql://cinder:${cinder_db_password}@${openstack_controller}/cinder",
+    quantum_sql_connection => "mysql://quantum:${quantum_db_password}@${openstack_controller}/quantum?charset=utf8",
+    multi_host             => true,
+    nova_user_password     => $nova_user_password,
+    quantum_user_password  => $quantum_user_password,
+    rabbit_password        => $rabbit_password,
+    glance_api_servers     => ["${openstack_controller}:9292"],
+    rabbit_host            => $openstack_controller,
+    quantum_host           => $openstack_controller,
+    keystone_host          => $openstack_controller,
+    vncproxy_host          => $openstack_controller,
+    vnc_enabled            => true,
+    verbose                => $verbose,
   }
 
 }
