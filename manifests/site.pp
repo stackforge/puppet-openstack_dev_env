@@ -162,17 +162,6 @@ node /compute/ {
     } ~> Service['libvirt']
   }
 
-  # External lookups.
-  # $rabbit_connection_hash = collect_rabbit_connection('ipaddress_eth1', 'architecture=amd64')
-  # $nova_db_addr = collect_nova_db_connection('ipaddress_eth1', 'architecture=amd64')
-  # $vnc_proxy_addr = unique(query_nodes('Class[nova::vncproxy]', 'ipaddress_eth1'))
-  # $glance_api_addr = unique(query_nodes('Class[glance::api]', 'ipaddress_eth1'))
-
-  #
-  # This is just for testing. It creates a loopback interface
-  # that can be mounted by cinder. In real deployments, you should
-  # partition your physical disks to have volume groups.
-  #
   class { 'cinder::setup_test_volume': } -> Service<||>
 
   class { 'openstack::compute':
