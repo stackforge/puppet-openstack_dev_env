@@ -102,8 +102,7 @@ node /openstack-controller/ {
     quantum                => $use_quantum,
     quantum_db_password    => $quantum_db_password,
     quantum_user_password  => $quantum_user_password,
-  # Required Horizon
-
+  # horizon
     secret_key             => $secret_key,
     # need to sort out networking...
     network_manager        => 'nova.network.manager.FlatDHCPManager',
@@ -126,7 +125,7 @@ node /openstack-controller/ {
     cache_server_port      => '11211',
     swift                  => false,
     horizon_app_links      => undef,
-    # Genera
+    # General
     verbose                => $verbose,
     purge_nova_config      => false,
   }
@@ -185,12 +184,14 @@ node /compute/ {
     cinder_sql_connection  => "mysql://cinder:${cinder_db_password}@${openstack_controller}/cinder",
     quantum_sql_connection => "mysql://quantum:${quantum_db_password}@${openstack_controller}/quantum?charset=utf8",
     multi_host             => $multi_host,
+    fixed_range            => $fixed_network_range,
     nova_user_password     => $nova_user_password,
+    quantum                => $use_quantum,
+    quantum_host           => $openstack_controller,
     quantum_user_password  => $quantum_user_password,
     rabbit_password        => $rabbit_password,
     glance_api_servers     => ["${openstack_controller}:9292"],
     rabbit_host            => $openstack_controller,
-    quantum_host           => $openstack_controller,
     keystone_host          => $openstack_controller,
     vncproxy_host          => $openstack_controller,
     vnc_enabled            => true,
