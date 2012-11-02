@@ -35,6 +35,7 @@ host {
   'puppet':              ip => '172.16.0.2';
   'openstackcontroller': ip => '172.16.0.3';
   'compute1':            ip => '172.16.0.4';
+  'compute2':            ip => '172.16.0.14';
   'novacontroller':      ip => '172.16.0.5';
   'glance':              ip => '172.16.0.6';
   'keystone':            ip => '172.16.0.7';

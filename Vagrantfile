@@ -29,6 +29,12 @@ Vagrant::Config.run do |config|
        'ip1'    => '172.16.0.4'
      }
    },
+   {'compute2' =>
+     {
+       'memory' => 2512,
+       'ip1'    => '172.16.0.14'
+     }
+   },
    {'nova_controller' =>
      {
        'memory' => 512,
