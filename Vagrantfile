@@ -90,6 +90,7 @@ Vagrant::Config.run do |config|
       # host only network
       agent.vm.network :hostonly, props['ip1'], :adapter => 2
       agent.vm.network :hostonly, props['ip1'].gsub(/(\d+\.\d+)\.\d+\.(\d+)/) {|x| "#{$1}.1.#{$2}" }, :adapter => 3
+      agent.vm.network :hostonly, props['ip1'].gsub(/(\d+\.\d+)\.\d+\.(\d+)/) {|x| "#{$1}.2.#{$2}" }, :adapter => 4
       #agent.vm.customize ["modifyvm", :id, "--nicpromisc1", "allow-all"]
       # natted network
       #agent.vm.customize ["modifyvm", :id, "--nic3", "hostonly"]
