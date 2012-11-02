@@ -41,13 +41,13 @@ $secret_key        = 'secret_key'
 
 $libvirt_type      = 'qemu'
 #$libvirt_type = 'kvm'
-$network_type      = 'quantum'
-#$network_type      = 'nova'
+#$network_type      = 'quantum'
+$network_type      = 'nova'
 if $network_type == 'nova' {
   $use_quantum = false
   $multi_host  = true
 } else {
-  $use_quamtum = true
+  $use_quantum = true
 }
 
 $fixed_network_range     = '10.0.0.0/24'
