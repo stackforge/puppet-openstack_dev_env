@@ -63,12 +63,13 @@ Vagrant::Config.run do |config|
        'memory' => 512,
        'ip1'    => '172.16.0.10'
      }
+   },
+   { 'openstack_all' => { 'memory' => 2512, 'ip1' => '172.16.0.11'} }
    #{'compute_1'  =>
    #  {'ip1' => '172.16.0.4'}
    #},
    #{'compute_2'  =>
    #  {'ip1' => '172.16.0.5'}
-   }
   ].each do |hash|
 
 
