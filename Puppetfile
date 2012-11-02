@@ -1,10 +1,10 @@
 forge "http://forge.puppetlabs.com"
 
-mod 'puppetlabs/openstack', :git => 'git://github.com/puppetlabs/puppetlabs-openstack'
-mod 'puppetlabs/nova', :git => 'git://github.com/puppetlabs/puppetlabs-nova'
-mod 'puppetlabs/glance', :git => 'git://github.com/puppetlabs/puppetlabs-glance'
-mod 'puppetlabs/keystone', :git => 'git://github.com/puppetlabs/puppetlabs-keystone'
-mod 'puppetlabs/horizon', :git => 'git://github.com/puppetlabs/puppetlabs-horizon'
+mod 'puppetlabs/openstack', :git => 'git://github.com/puppetlabs/puppetlabs-openstack', :ref => 'folsom'
+mod 'puppetlabs/nova', :git => 'git://github.com/puppetlabs/puppetlabs-nova', :ref => 'folsom'
+mod 'puppetlabs/glance', :git => 'git://github.com/puppetlabs/puppetlabs-glance', :ref => 'folsom'
+mod 'puppetlabs/keystone', :git => 'git://github.com/puppetlabs/puppetlabs-keystone', :ref => 'folsom'
+mod 'puppetlabs/horizon', :git => 'git://github.com/puppetlabs/puppetlabs-horizon', :ref => 'folsom'
 mod 'puppetlabs/swift', :git => 'git://github.com/puppetlabs/puppetlabs-swift'
 mod 'puppetlabs/cinder', :git => 'git://github.com/puppetlabs/puppetlabs-cinder'
 mod 'puppetlabs/tempest', :git => 'git://github.com/puppetlabs/puppetlabs-tempest'
