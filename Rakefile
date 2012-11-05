@@ -8,6 +8,14 @@ def cmd_system (cmd)
   result
 end
 
+def git_cmd(cmd)
+  command = 'git ' + cmd
+  Open3.popen3(*command) do |i, o, e, t|
+    raise StandardError, e.read unless (t ? t.value : $?).success?
+    o.read.split("\n")
+  end
+end
+
 def on_box (box, cmd)
   cmd_system("vagrant ssh #{box} -c '#{cmd}'")
 end
@@ -61,47 +69,50 @@ end
 
 remote_name = 'bodepd'
 
-namespace :paven do
+namespace :git do
 
   cwd = File.expand_path(File.dirname(__FILE__))
 
   desc 'for all repos in the module directory, add a read/write remote'
   task :dev_setup do
 
-    each_repo do |repo|
+    each_repo do |module_name|
       # need to handle more failure cases
-      remotes = repo.remote_names
+      remotes = git_cmd('remote')
       if remotes.include?(remote_name)
-        puts "Did not have to add remote #{remote_name} to #{File.basename(repo.path)}"
+        puts "Did not have to add remote #{remote_name} to #{module_name}"
       elsif ! remotes.include?('origin')
-        raise(Exception, "The repo #{File.basename(repo.path)} does not have a remote called origin, failing")
+        raise(Exception, "Repo #{module_name} has no remote called origin, failing")
       else
-        url = repo.remote_push_url('origin').gsub(/(git|https?):\/\/(.+)\/(.+)?\/(.+)/) do
-          "git@#{$2}:#{remote_name}/#{$4}"
+        remote_url = git_cmd('remote show origin').detect {|x| x =~ /\s+Push\s+URL: / }
+        if remote_url =~ /(git|https?):\/\/(.+)\/(.+)?\/(.+)/
+          url = "git@#{$2}:#{remote_name}/#{$4}"
+        else
+          puts "remote_url #{remote_url} did not have the expected format. weird..."
         end
         puts "Adding remote #{remote_name} as #{url}"
-        repo.add_remote(remote_name, url)
+        git_cmd("remote add #{remote_name} {url}")
       end
     end
   end
 
   desc 'pull the latest version of all code'
   task :pull_all do
-    each_repo do |repo|
-      puts "Pulling repo: #{File.basename(repo.path)}"
-      puts '  ' + repo.pull.join("\n  ")
+    each_repo do |module_name|
+      puts "Pulling repo: #{module_name}"
+      puts '  ' + git_cmd('pull').join("\n  ")
     end
   end
 
   desc 'shows the current state of code that has not been commited'
   task :status_all do
-    each_repo do |repo|
-      status = repo.status
+    each_repo do |module_name|
+      status = git_cmd('status')
       if status.include?('nothing to commit (working directory clean)')
-        puts "Module #{File.basename(repo.path)} has not changed" if verbose
+        puts "Module #{module_name} has not changed" if verbose
       else
-        puts "Uncommitted changes for: #{File.basename(repo.path)}"
-        puts "  #{repo.status.join("\n  ")}"
+        puts "Uncommitted changes for: #{module_name}"
+        puts "  #{status.join("\n  ")}"
       end
     end
   end
@@ -111,35 +122,34 @@ namespace :paven do
     # I need to be able to return this as a data structure
     # when I start to do more complicated things like
     # automated releases, I will need this data
-    each_repo do |repo|
+    each_repo do |module_name|
       require 'puppet'
-      modulefile = File.join(repo.path, 'Modulefile')
+      modulefile = File.join(Dir.getwd, 'Modulefile')
       if File.exists?(modulefile)
-        print File.basename(repo.path)
+        print module_name
         metadata  = ::Puppet::ModuleTool::Metadata.new
         ::Puppet::ModuleTool::ModulefileReader.evaluate(metadata, modulefile)
         print ':' + metadata.version
-        branch_output = repo.git_cmd('branch')
+        branch_output = git_cmd('branch')
         if branch_output.first =~ /\* (.+)/
           puts ":#{$1}"
-          git_cmd = %W(log #{metadata.version}..HEAD --oneline)
-          puts '  ' + repo.git_cmd(git_cmd).join("\n  ")
+          puts '  ' + git_cmd("log #{metadata.version}..HEAD --oneline").join("\n  ")
+          puts ''
         else
           puts '  ' + branch_output.join("\n  ")
         end
       else
-        puts "#{File.basename(repo.path)} does not have a Modulefile"
+        puts "#{module_name} does not have a Modulefile"
       end
     end
   end
 
-  task :check_sha do
-    each_repo do |repo|
-      print File.basename(repo.path) + ':'
-      puts repo.current_commit_hash
+  task :check_sha_all do
+    each_repo do |module_name|
+      print module_name + ':'
+      puts git_cmd('rev-parse HEAD --quiet')
     end
   end
-
 
 end
 
@@ -155,7 +165,13 @@ def each_repo(&block)
     if manifest.source.is_a? Librarian::Puppet::Source::Git
       module_name = manifest.name.split('/', 2)[1]
       module_path = File.join(env.install_path,module_name)
-      yield Librarian::Source::Git::Repository.new(env, module_path)
+      if File.directory?(module_path)
+        Dir.chdir(module_path) do
+          yield module_name
+        end
+      else
+        puts "Module directory #{module_path} does not exist... How strange."
+      end
     else
       puts "Found a non-git manifest: #{manifest.class}, ignoring"
     end
