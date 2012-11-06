@@ -77,11 +77,17 @@ node /openstack-controller/ {
     include 'apache'
   } else {
     # redhat specific dashboard stuff
+    file_line { 'nova_sudoers':
+      line   => 'nova ALL = (root) NOPASSWD: /usr/bin/nova-rootwrap /etc/nova/rootwrap.conf *',
+      path   => '/etc/sudoers',
+      before => Package['nova-common'],
+    }
+
     class {'apache':}
     class {'apache::mod::wsgi':}
     file { '/etc/httpd/conf.d/openstack-dashboard.conf':}
 
-    nova_config { 'rpc_backend': value => 'rpc_backend=nova.openstack.common.rpc.impl_kombu';}
+    nova_config { 'rpc_backend': value => 'nova.openstack.common.rpc.impl_kombu';}
     #selboolean{'httpd_can_network_connect':
     #  value => on,
     #  persistent => true,
@@ -225,13 +231,13 @@ node /compute/ {
         path   => '/etc/sudoers',
         before => Service['nova-network'],
       }
-      file_line { 'nova_sudoers':
+      file_line { 'cinder_sudoers':
         line    => 'cinder ALL = (root) NOPASSWD: /usr/bin/cinder-rootwrap /etc/cinder/rootwrap.conf *',
         path    => '/etc/sudoers',
         before  => Service['cinder-volume'],
       }
 
-      nova_config { 'rpc_backend': value => 'rpc_backend=nova.openstack.common.rpc.impl_kombu';}
+      nova_config { 'rpc_backend': value => 'nova.openstack.common.rpc.impl_kombu';}
 
       nova_config{
         "network_host": value => $openstack_controller;
