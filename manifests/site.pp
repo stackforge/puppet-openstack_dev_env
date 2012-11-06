@@ -73,7 +73,17 @@ node /openstack-controller/ {
     quantum => $use_quantum,
   }
 
-  include apache
+  if $::osfamily == 'Debian' {
+    include 'apache'
+  } else {
+    package { 'httpd':
+      ensure => present
+    }~>
+    service { 'httpd':
+      ensure => running,
+      enable => true
+    }
+  }
 
   class { 'openstack::controller':
     #floating_range          => $floating_network_range,

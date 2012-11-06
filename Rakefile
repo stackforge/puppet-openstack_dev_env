@@ -91,7 +91,7 @@ namespace :git do
           puts "remote_url #{remote_url} did not have the expected format. weird..."
         end
         puts "Adding remote #{remote_name} as #{url}"
-        git_cmd("remote add #{remote_name} {url}")
+        git_cmd("remote add #{remote_name} #{url}")
       end
     end
   end
