@@ -76,12 +76,47 @@ node /openstack-controller/ {
   if $::osfamily == 'Debian' {
     include 'apache'
   } else {
-    package { 'httpd':
-      ensure => present
-    }~>
-    service { 'httpd':
-      ensure => running,
-      enable => true
+    # redhat specific dashboard stuff
+    class {'apache':}
+    class {'apache::mod::wsgi':}
+    file { '/etc/httpd/conf.d/openstack-dashboard.conf':}
+
+    nova_config { 'rpc_backend': value => 'rpc_backend=nova.openstack.common.rpc.impl_kombu';}
+    #selboolean{'httpd_can_network_connect':
+    #  value => on,
+    #  persistent => true,
+    #}
+
+    firewall { '001 horizon incomming':
+      proto    => 'tcp',
+      dport    => ['80'],
+      action   => 'accept',
+    }
+    firewall { '001 glance incomming':
+      proto    => 'tcp',
+      dport    => ['9292'],
+      action   => 'accept',
+    }
+    firewall { '001 keystone incomming':
+      proto    => 'tcp',
+      dport    => ['5000', '35357'],
+      action   => 'accept',
+    }
+
+    firewall { '001 mysql incomming':
+      proto    => 'tcp',
+      dport    => ['3306'],
+      action   => 'accept',
+    }
+    firewall { '001 novaapi incomming':
+      proto    => 'tcp',
+      dport    => ['8773', '8774', '8776'],
+      action   => 'accept',
+    }
+    firewall { '001 qpid incomming':
+      proto    => 'tcp',
+      dport    => ['5672'],
+      action   => 'accept',
     }
   }
 
@@ -157,19 +192,64 @@ node /openstack-controller/ {
 
 node /compute/ {
 
+
   # TODO not sure why this is required
   # this has a bug, and is constantly added to the file
   if $libvirt_type == 'qemu' {
-    Package['libvirt'] ->
-    file_line { 'quemu_hack':
-      line => 'cgroup_device_acl = [
-     "/dev/null", "/dev/full", "/dev/zero",
-     "/dev/random", "/dev/urandom",
-     "/dev/ptmx", "/dev/kvm", "/dev/kqemu",
-     "/dev/rtc", "/dev/hpet", "/dev/net/tun",]',
-      path   => '/etc/libvirt/qemu.conf',
-      ensure => present,
-    } ~> Service['libvirt']
+    if $::osfamily == 'Debian' {
+      Package['libvirt'] ->
+      file_line { 'quemu_hack':
+        line => 'cgroup_device_acl = [
+       "/dev/null", "/dev/full", "/dev/zero",
+       "/dev/random", "/dev/urandom",
+       "/dev/ptmx", "/dev/kvm", "/dev/kqemu",
+       "/dev/rtc", "/dev/hpet", "/dev/net/tun",]',
+        path   => '/etc/libvirt/qemu.conf',
+        ensure => present,
+      } ~> Service['libvirt']
+    } elsif $::osfamily == 'RedHat' {
+
+      package { 'avahi': ensure => present } ~>
+      service { 'messagebus':
+        ensure => running,
+        enable => true,
+      } ~>
+      service { 'avahi-daemon':
+        ensure => running,
+        enable => true,
+      } ~>
+      Service['libvirtd']
+
+      file_line { 'nova_sudoers':
+        line   => 'nova ALL = (root) NOPASSWD: /usr/bin/nova-rootwrap /etc/nova/rootwrap.conf *',
+        path   => '/etc/sudoers',
+        before => Service['nova-network'],
+      }
+      file_line { 'nova_sudoers':
+        line    => 'cinder ALL = (root) NOPASSWD: /usr/bin/cinder-rootwrap /etc/cinder/rootwrap.conf *',
+        path    => '/etc/sudoers',
+        before  => Service['cinder-volume'],
+      }
+
+      nova_config { 'rpc_backend': value => 'rpc_backend=nova.openstack.common.rpc.impl_kombu';}
+
+      nova_config{
+        "network_host": value => $openstack_controller;
+        "libvirt_inject_partition": value => "-1";
+      }
+      if $libvirt_type == "qemu" {
+        file { "/usr/bin/qemu-system-x86_64":
+          ensure => link,
+          target => "/usr/libexec/qemu-kvm",
+          notify => Service["nova-compute"],
+        }
+      }
+      firewall { '001 volume incomming':
+        proto    => 'tcp',
+        dport    => ['3260'],
+        action   => 'accept',
+      }
+    }
   }
 
   class { 'cinder::setup_test_volume': } -> Service<||>
