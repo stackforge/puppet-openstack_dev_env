@@ -1,12 +1,24 @@
 Vagrant::Config.run do |config|
 
-  config.vm.box     = 'precise64'
-  config.vm.box_url = 'http://files.vagrantup.com/precise64.box'
 
   if ENV['OPENSTACK_GUI_MODE']
     gui_mode = ENV['OPENSTACK_GUI_MODE'].to_bool
   else
     gui_mode = true
+  end
+
+  if ENV['OPERATINGSYSTEM']
+    if ENV['OPERATINGSYSTEM'].downcase == 'redhat'
+      os_name = 'centos'
+      config.vm.box     = 'centos'
+      config.vm.box_url = 'https://dl.dropbox.com/u/7225008/Vagrant/CentOS-6.3-x86_64-minimal.box'
+    else
+      raise(Exception, "undefined operatingsystem: #{ENV['OPERATINGSYSTEM']}")
+    end
+  else
+    os_name = 'precise64'
+    config.vm.box     = 'precise64'
+    config.vm.box_url = 'http://files.vagrantup.com/precise64.box'
   end
 
   ssh_forward_port = 2244
@@ -106,12 +118,15 @@ Vagrant::Config.run do |config|
 
       node_name = "#{name.gsub('_', '-')}-#{Time.now.strftime('%Y%m%d%m%s')}"
 
-      agent.vm.provision :shell, :inline => "apt-get update"
-      #agent.vm.provision :shell, :inline => "apt-get -y upgrade"
+      if os_name =~ /precise/
+        agent.vm.provision :shell, :inline => "apt-get update"
+      elsif os_name =~ /centos/
+        agent.vm.provision :shell, :inline => "yum clean all"
+      end
 
       agent.vm.provision :puppet do |puppet|
         puppet.manifests_path = 'manifests'
-        puppet.manifest_file  = 'hosts.pp'
+        puppet.manifest_file  = "setup/#{os_name}.pp"
         puppet.module_path    = 'modules'
         puppet.options = ['--verbose', '--debug', '--show_diff',  "--certname=#{node_name}"]
       end
