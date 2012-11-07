@@ -17,3 +17,10 @@ host {
 group { 'puppet':
   ensure => 'present',
 }
+
+# lay down a file that you run run for testing
+file { '/root/run_puppet.sh':
+  content =>
+"#!/bin/bash
+puppet apply --modulepath /tmp/vagrant-puppet/modules-0/ --certname ${clientcert} /tmp/vagrant-puppet/manifests/site.pp"
+}
