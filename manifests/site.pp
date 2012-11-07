@@ -88,6 +88,7 @@ node /openstack-controller/ {
     file { '/etc/httpd/conf.d/openstack-dashboard.conf':}
 
     nova_config { 'rpc_backend': value => 'nova.openstack.common.rpc.impl_kombu';}
+    cinder_config { 'DEFAULT/rpc_backend': value => 'cinder.openstack.common.rpc.impl_kombu';}
     #selboolean{'httpd_can_network_connect':
     #  value => on,
     #  persistent => true,
@@ -122,6 +123,11 @@ node /openstack-controller/ {
     firewall { '001 qpid incomming':
       proto    => 'tcp',
       dport    => ['5672'],
+      action   => 'accept',
+    }
+    firewall { '001 novncproxy incomming':
+      proto    => 'tcp',
+      dport    => ['6080'],
       action   => 'accept',
     }
   }
@@ -225,6 +231,7 @@ node /compute/ {
         enable => true,
       } ~>
       Service['libvirtd']
+      cinder_config { 'DEFAULT/rpc_backend': value => 'cinder.openstack.common.rpc.impl_kombu';}
 
       file_line { 'nova_sudoers':
         line   => 'nova ALL = (root) NOPASSWD: /usr/bin/nova-rootwrap /etc/nova/rootwrap.conf *',
