@@ -257,6 +257,11 @@ node /compute/ {
           notify => Service["nova-compute"],
         }
       }
+      firewall { '001 vnc listen incomming':
+        proto    => 'tcp',
+        dport    => ['6080'],
+        action   => 'accept',
+      }
       firewall { '001 volume incomming':
         proto    => 'tcp',
         dport    => ['3260'],
