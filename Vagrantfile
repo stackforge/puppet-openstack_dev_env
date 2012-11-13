@@ -7,7 +7,7 @@ Vagrant::Config.run do |config|
     gui_mode = true
   end
 
-  if ENV['OPERATINGSYSTEM']
+  if ENV['OPERATINGSYSTEM'] and ENV['OPERATINGSYSTEM'] != ''
     if ENV['OPERATINGSYSTEM'].downcase == 'redhat'
       os_name = 'centos'
       config.vm.box     = 'centos'
