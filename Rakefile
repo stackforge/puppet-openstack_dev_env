@@ -151,7 +151,60 @@ namespace :git do
     end
   end
 
+  desc 'prints the total number of people that have contributed to all projects.'
+  task :num_contributors do
+    puts contributor_hash.size
+  end
+
+  desc 'print the names of all contributors (and what projects they contributed to'
+  task :list_contributors do
+    contributor_hash.each do |k, v|
+      puts "#{k}:#{v[:repos].inspect}"
+    end
+  end
 end
+
+namespace :test do
+
+  desc 'test openstack with basic test script'
+  task 'two_node' do
+    #Rake::Task['openstack:setup'.to_sym].invoke
+    Rake::Task['openstack:deploy_two_node'.to_sym].invoke
+    on_box('openstack_controller', 'sudo bash /tmp/test_nova.sh;exit $?')
+  end
+
+  task :test do
+    on_box('openstack_controller', 'sudo bash /tmp/foo.sh')
+  end
+end
+
+def contributor_hash
+  repos_i_care_about = ['nova', 'glance', 'openstack', 'keystone', 'swift', 'horizon', 'cinder']
+  contributors = {}
+  each_repo do |module_name|
+    if repos_i_care_about.include?(module_name)
+      logs = git_cmd('log --format=short')
+      user_lines = logs.select {|x| x =~ /^Author:\s+(.*)$/ }
+      user_lines.collect do |x|
+        if x =~ /^Author:\s+(.*)?\s+<((\S+)@(\S+))>$/
+          unless ['root', 'vagrant', 'Dan'].include?($1)
+            if contributors[$1]
+              contributors[$1][:repos] = contributors[$1][:repos] | [module_name]
+            else
+              contributors[$1] = {:email => $2, :repos => [module_name] }
+            end
+          else
+            # trimming out extra users
+          end
+        else
+          puts "Skipping unexpected line #{x}"
+        end
+      end
+    end
+  end
+  contributors
+end
+
 
 def each_repo(&block)
   require 'librarian/puppet'
