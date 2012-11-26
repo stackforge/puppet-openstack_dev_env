@@ -166,6 +166,72 @@ namespace :git do
   end
 end
 
+# list of users that can approve PRs that should run through the integration
+# tests
+admin_users         = ['bodepd']
+test_with_this_body = 'test_it'
+
+namespace :github do
+
+  desc 'pick a single pull request to test. Accepts the project name and number of PR to test'
+    # you can also specify the OPERATINGSYSTEM to test as an ENV variable
+  task :test_pull_request, [:project_name, :number] do |t, args|
+    # TODO - this is way too much overhead, I am reusing each_repo,
+    # but I should write some kind of repo select
+    each_repo do |repo_name|
+      #require 'ruby-debug';debugger
+      if repo_name == args.project_name
+        require 'curb'
+        require 'json'
+        project_url = "https://api.github.com/repos/puppetlabs/puppetlabs-#{args.project_name}"
+        pull_request_url = "#{project_url}/pulls/#{args.number}"
+        resp = Curl.get(pull_request_url)
+        pr   = JSON.parse(resp.body_str)
+
+        if ! pr['merged']
+          if pr['mergeable']
+            if pr['comments'] > 0
+              resp = Curl.get("#{project_url}/issues/#{args.number}/comments")
+              comments = JSON.parse(resp.body_str)
+              puts 'going through comments'
+              comments.each do |comment|
+                if admin_users.include?(comment['user']['login'])
+                  if comment['body'] == 'test_it'
+                    require 'ruby-debug';debugger
+                    clone_url   = pr['head']['repo']['clone_url']
+                    remote_name = pr['head']['user']['login']
+                    sha         = pr['head']['sha']
+                    puts 'found one that we should test'
+                    # TODO I am not sure how reliable all of this is going
+                    # to be
+                    remotes = git_cmd('remote')
+                    if remotes.include?(remote_name)
+                      git_cmd("fetch #{remote_name}")
+                    else
+                      git_cmd("remote add #{remote_name} #{clone_url}}")
+                    end
+                    git_cmd("checkout #{sha}")
+                  end
+                end
+              end
+            else
+              puts "PR: #{args.number} from #{args.project_name} has no commits.\
+              I will not test it. We only test things approved.
+              "
+            end
+          else
+            puts "PR: #{args.number} from #{args.project_name} cannot be merged, will not test"
+          end
+        else
+          puts "PR: #{args.number} from #{args.project_name} was already merged, will not test"
+        end
+      end
+    end
+    #GET /repos/:owner/:repo/pulls/:number/comments
+  end
+
+end
+
 namespace :test do
 
   desc 'test openstack with basic test script'
