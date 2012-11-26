@@ -118,28 +118,30 @@ namespace :git do
   end
 
   desc 'make sure that the current version from the module file matches the last tagged version'
-  task :check_tags do
+  task :check_tags , [:project_name] do |t, args|
     # I need to be able to return this as a data structure
     # when I start to do more complicated things like
     # automated releases, I will need this data
     each_repo do |module_name|
       require 'puppet'
-      modulefile = File.join(Dir.getwd, 'Modulefile')
-      if File.exists?(modulefile)
-        print module_name
-        metadata  = ::Puppet::ModuleTool::Metadata.new
-        ::Puppet::ModuleTool::ModulefileReader.evaluate(metadata, modulefile)
-        print ':' + metadata.version
-        branch_output = git_cmd('branch')
-        if branch_output.first =~ /\* (.+)/
-          puts ":#{$1}"
-          puts '  ' + git_cmd("log #{metadata.version}..HEAD --oneline").join("\n  ")
-          puts ''
+      if ! args.project_name || args.project_name == module_name
+        modulefile = File.join(Dir.getwd, 'Modulefile')
+        if File.exists?(modulefile)
+          print module_name
+          metadata  = ::Puppet::ModuleTool::Metadata.new
+          ::Puppet::ModuleTool::ModulefileReader.evaluate(metadata, modulefile)
+          print ':' + metadata.version
+          branch_output = git_cmd('branch')
+          if branch_output.first =~ /\* (.+)/
+            puts ":#{$1}"
+            puts '  ' + git_cmd("log #{metadata.version}..HEAD --oneline").join("\n  ")
+            puts ''
+          else
+            puts '  ' + branch_output.join("\n  ")
+          end
         else
-          puts '  ' + branch_output.join("\n  ")
+          puts "#{module_name} does not have a Modulefile"
         end
-      else
-        puts "#{module_name} does not have a Modulefile"
       end
     end
   end
