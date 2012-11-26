@@ -128,13 +128,13 @@ Vagrant::Config.run do |config|
         puppet.manifests_path = 'manifests'
         puppet.manifest_file  = "setup/#{os_name}.pp"
         puppet.module_path    = 'modules'
-        puppet.options = ['--verbose', '--debug', '--show_diff',  "--certname=#{node_name}"]
+        puppet.options = ['--verbose', '--show_diff',  "--certname=#{node_name}"]
       end
       agent.vm.provision :puppet do |puppet|
         puppet.manifests_path = 'manifests'
         puppet.manifest_file  = 'site.pp'
         puppet.module_path    = 'modules'
-        puppet.options = ['--verbose', '--debug', '--show_diff', "--certname=#{node_name}"]
+        puppet.options = ['--verbose', '--show_diff', "--certname=#{node_name}"]
       end
     end
   end

@@ -118,28 +118,30 @@ namespace :git do
   end
 
   desc 'make sure that the current version from the module file matches the last tagged version'
-  task :check_tags do
+  task :check_tags , [:project_name] do |t, args|
     # I need to be able to return this as a data structure
     # when I start to do more complicated things like
     # automated releases, I will need this data
     each_repo do |module_name|
       require 'puppet'
-      modulefile = File.join(Dir.getwd, 'Modulefile')
-      if File.exists?(modulefile)
-        print module_name
-        metadata  = ::Puppet::ModuleTool::Metadata.new
-        ::Puppet::ModuleTool::ModulefileReader.evaluate(metadata, modulefile)
-        print ':' + metadata.version
-        branch_output = git_cmd('branch')
-        if branch_output.first =~ /\* (.+)/
-          puts ":#{$1}"
-          puts '  ' + git_cmd("log #{metadata.version}..HEAD --oneline").join("\n  ")
-          puts ''
+      if ! args.project_name || args.project_name == module_name
+        modulefile = File.join(Dir.getwd, 'Modulefile')
+        if File.exists?(modulefile)
+          print module_name
+          metadata  = ::Puppet::ModuleTool::Metadata.new
+          ::Puppet::ModuleTool::ModulefileReader.evaluate(metadata, modulefile)
+          print ':' + metadata.version
+          branch_output = git_cmd('branch')
+          if branch_output.first =~ /\* (.+)/
+            puts ":#{$1}"
+            puts '  ' + git_cmd("log #{metadata.version}..HEAD --oneline").join("\n  ")
+            puts ''
+          else
+            puts '  ' + branch_output.join("\n  ")
+          end
         else
-          puts '  ' + branch_output.join("\n  ")
+          puts "#{module_name} does not have a Modulefile"
         end
-      else
-        puts "#{module_name} does not have a Modulefile"
       end
     end
   end
@@ -151,7 +153,126 @@ namespace :git do
     end
   end
 
+  desc 'prints the total number of people that have contributed to all projects.'
+  task :num_contributors do
+    puts contributor_hash.size
+  end
+
+  desc 'print the names of all contributors (and what projects they contributed to'
+  task :list_contributors do
+    contributor_hash.each do |k, v|
+      puts "#{k}:#{v[:repos].inspect}"
+    end
+  end
 end
+
+# list of users that can approve PRs that should run through the integration
+# tests
+admin_users         = ['bodepd']
+test_with_this_body = 'test_it'
+
+namespace :github do
+
+  desc 'pick a single pull request to test. Accepts the project name and number of PR to test'
+    # you can also specify the OPERATINGSYSTEM to test as an ENV variable
+  task :test_pull_request, [:project_name, :number] do |t, args|
+    # TODO - this is way too much overhead, I am reusing each_repo,
+    # but I should write some kind of repo select
+    each_repo do |repo_name|
+      #require 'ruby-debug';debugger
+      if repo_name == args.project_name
+        require 'curb'
+        require 'json'
+        project_url = "https://api.github.com/repos/puppetlabs/puppetlabs-#{args.project_name}"
+        pull_request_url = "#{project_url}/pulls/#{args.number}"
+        resp = Curl.get(pull_request_url)
+        pr   = JSON.parse(resp.body_str)
+
+        if ! pr['merged']
+          if pr['mergeable']
+            if pr['comments'] > 0
+              resp = Curl.get("#{project_url}/issues/#{args.number}/comments")
+              comments = JSON.parse(resp.body_str)
+              puts 'going through comments'
+              comments.each do |comment|
+                if admin_users.include?(comment['user']['login'])
+                  if comment['body'] == 'test_it'
+                    require 'ruby-debug';debugger
+                    clone_url   = pr['head']['repo']['clone_url']
+                    remote_name = pr['head']['user']['login']
+                    sha         = pr['head']['sha']
+                    puts 'found one that we should test'
+                    # TODO I am not sure how reliable all of this is going
+                    # to be
+                    remotes = git_cmd('remote')
+                    if remotes.include?(remote_name)
+                      git_cmd("fetch #{remote_name}")
+                    else
+                      git_cmd("remote add #{remote_name} #{clone_url}}")
+                    end
+                    git_cmd("checkout #{sha}")
+                  end
+                end
+              end
+            else
+              puts "PR: #{args.number} from #{args.project_name} has no commits.\
+              I will not test it. We only test things approved.
+              "
+            end
+          else
+            puts "PR: #{args.number} from #{args.project_name} cannot be merged, will not test"
+          end
+        else
+          puts "PR: #{args.number} from #{args.project_name} was already merged, will not test"
+        end
+      end
+    end
+    #GET /repos/:owner/:repo/pulls/:number/comments
+  end
+
+end
+
+namespace :test do
+
+  desc 'test openstack with basic test script'
+  task 'two_node' do
+    #Rake::Task['openstack:setup'.to_sym].invoke
+    Rake::Task['openstack:deploy_two_node'.to_sym].invoke
+    on_box('openstack_controller', 'sudo bash /tmp/test_nova.sh;exit $?')
+  end
+
+  task :test do
+    on_box('openstack_controller', 'sudo bash /tmp/foo.sh')
+  end
+end
+
+def contributor_hash
+  repos_i_care_about = ['nova', 'glance', 'openstack', 'keystone', 'swift', 'horizon', 'cinder']
+  contributors = {}
+  each_repo do |module_name|
+    if repos_i_care_about.include?(module_name)
+      logs = git_cmd('log --format=short')
+      user_lines = logs.select {|x| x =~ /^Author:\s+(.*)$/ }
+      user_lines.collect do |x|
+        if x =~ /^Author:\s+(.*)?\s+<((\S+)@(\S+))>$/
+          unless ['root', 'vagrant', 'Dan'].include?($1)
+            if contributors[$1]
+              contributors[$1][:repos] = contributors[$1][:repos] | [module_name]
+            else
+              contributors[$1] = {:email => $2, :repos => [module_name] }
+            end
+          else
+            # trimming out extra users
+          end
+        else
+          puts "Skipping unexpected line #{x}"
+        end
+      end
+    end
+  end
+  contributors
+end
+
 
 def each_repo(&block)
   require 'librarian/puppet'
