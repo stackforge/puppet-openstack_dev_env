@@ -247,6 +247,9 @@ namespace :github do
 
 end
 
+def each_testable_pull_request(&block)
+end
+
 namespace :test do
 
   desc 'test openstack with basic test script on redhat and ubuntu'
@@ -263,6 +266,10 @@ namespace :test do
       on_box('openstack_controller', 'sudo bash /tmp/test_nova.sh;exit $?')
     end
   end
+
+  desc 'test all in one deployment on redhat/ubuntu (not yet implemented)'
+  task 'all_in_one' do
+
   end
 
   task :test do
