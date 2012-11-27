@@ -201,11 +201,21 @@ namespace :github do
               puts 'going through comments'
               comments.each do |comment|
                 if admin_users.include?(comment['user']['login'])
+                  test_file = File.join(base_dir, '.current_tests')
+                  if File.exists?(test_file)
+                    loaded_pr = YAML.load_file(test_file)
+                    puts "Branch already checkout out for testing #{loaded_pr[:project]}/#{loaded_pr[:number]}"
+                  end
                   if comment['body'] == 'test_it'
-                    require 'ruby-debug';debugger
                     clone_url   = pr['head']['repo']['clone_url']
                     remote_name = pr['head']['user']['login']
                     sha         = pr['head']['sha']
+                    File.open(test_file, 'w') do |fh|
+                      fh.write({
+                        :project => args.project_name,
+                        :number  => args.number
+                      }.to_yaml)
+                    end
                     puts 'found one that we should test'
                     # TODO I am not sure how reliable all of this is going
                     # to be
