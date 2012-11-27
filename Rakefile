@@ -234,11 +234,20 @@ end
 
 namespace :test do
 
-  desc 'test openstack with basic test script'
+  desc 'test openstack with basic test script on redhat and ubuntu'
   task 'two_node' do
+    require 'yaml'
     #Rake::Task['openstack:setup'.to_sym].invoke
-    Rake::Task['openstack:deploy_two_node'.to_sym].invoke
-    on_box('openstack_controller', 'sudo bash /tmp/test_nova.sh;exit $?')
+    ['redhat', 'ubuntu'].each do |os|
+      cfg = File.join(base_dir, 'config.yaml')
+      yml = YAML.load_file(cfg).merge({'operatingsystem' => os})
+      File.open(cfg, 'w') {|f| f.write(yml.to_yaml) }
+      cmd_system('vagrant destroy -f')
+      deploy_two_node
+      # I should check this to see if the last line is cirros
+      on_box('openstack_controller', 'sudo bash /tmp/test_nova.sh;exit $?')
+    end
+  end
   end
 
   task :test do
