@@ -20,6 +20,10 @@ def on_box (box, cmd)
   cmd_system("vagrant ssh #{box} -c '#{cmd}'")
 end
 
+def base_dir
+  File.expand_path(File.dirname(__FILE__))
+end
+
 # bring vagrant vm with image name up
 def build(instance, env)
   unless vm = env.vms[instance]
@@ -49,8 +53,6 @@ namespace :openstack do
 
   task 'destroy' do
     require 'vagrant'
-    env = Vagrant::Environment.new(:cwd => File.dirname(__FILE__), :ui_class => Vagrant::UI::Colored)
-
     puts "About to destroy all vms..."
     env.cli('vagrant destroy -f')
     puts "Destroyed all vms"
@@ -71,7 +73,7 @@ remote_name = 'bodepd'
 
 namespace :git do
 
-  cwd = File.expand_path(File.dirname(__FILE__))
+  cwd = base_dir
 
   desc 'for all repos in the module directory, add a read/write remote'
   task :dev_setup do
