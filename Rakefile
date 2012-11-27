@@ -20,6 +20,13 @@ def on_box (box, cmd)
   cmd_system("vagrant ssh #{box} -c '#{cmd}'")
 end
 
+def deploy_two_node
+  require 'vagrant'
+  env = Vagrant::Environment.new(:cwd => base_dir, :ui_class => Vagrant::UI::Colored)
+  build(:openstack_controller, env)
+  build(:compute1, env)
+end
+
 def base_dir
   File.expand_path(File.dirname(__FILE__))
 end
@@ -52,18 +59,14 @@ namespace :openstack do
   end
 
   task 'destroy' do
-    require 'vagrant'
     puts "About to destroy all vms..."
-    env.cli('vagrant destroy -f')
+    cmd_system('vagrant destroy -f')
     puts "Destroyed all vms"
   end
 
   desc 'deploys the entire environment'
   task :deploy_two_node do
-    require 'vagrant'
-    env = Vagrant::Environment.new(:cwd => File.dirname(__FILE__), :ui_class => Vagrant::UI::Colored)
-    build(:openstack_controller, env)
-    build(:compute1, env)
+    deploy_two_node
   end
 
 end
@@ -207,11 +210,11 @@ namespace :github do
                     # TODO I am not sure how reliable all of this is going
                     # to be
                     remotes = git_cmd('remote')
-                    if remotes.include?(remote_name)
-                      git_cmd("fetch #{remote_name}")
-                    else
-                      git_cmd("remote add #{remote_name} #{clone_url}}")
+                    unless remotes.include?(remote_name)
+                      git_cmd("remote add #{remote_name} #{clone_url}")
                     end
+                    git_cmd("fetch #{remote_name}")
+                    # TODO does that work if master has been updated?
                     git_cmd("checkout #{sha}")
                   end
                 end
