@@ -31,7 +31,7 @@ $quantum_user_password = 'quantum_user_password'
 
 $verbose = 'True'
 
-$public_interface  = 'eth1'
+$public_interface  = 'eth0'
 $private_interface = 'eth2'
 
 $rabbit_password   = 'rabbit_password'
