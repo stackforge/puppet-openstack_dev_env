@@ -6,9 +6,9 @@
 
 ####### shared variables ##################
 
-Exec {
-  logoutput => true,
-}
+#Exec {
+#  logoutput => true,
+#}
 
 # database config
 $mysql_root_password  = 'mysql_root_password'

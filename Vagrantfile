@@ -1,24 +1,31 @@
+def parse_vagrant_config(
+  config_file=File.expand_path(File.join(File.dirname(__FILE__), 'config.yaml'))
+)
+  require 'yaml'
+  config = {'gui_mode' => "false", 'operatingsystem' => 'ubuntu'}
+  if File.exists?(config_file)
+    overrides = YAML.load_file(config_file)
+    config.merge(overrides)
+  end
+  config
+end
+
 Vagrant::Config.run do |config|
 
+  v_config = parse_vagrant_config
 
-  if ENV['OPENSTACK_GUI_MODE']
-    gui_mode = ENV['OPENSTACK_GUI_MODE'].to_bool
-  else
-    gui_mode = true
-  end
-
-  if ENV['OPERATINGSYSTEM'] and ENV['OPERATINGSYSTEM'] != ''
-    if ENV['OPERATINGSYSTEM'].downcase == 'redhat'
+  if v_config['operatingsystem'] and v_config['operatingsystem'] != ''
+    if v_config['operatingsystem'].downcase == 'redhat'
       os_name = 'centos'
       config.vm.box     = 'centos'
       config.vm.box_url = 'https://dl.dropbox.com/u/7225008/Vagrant/CentOS-6.3-x86_64-minimal.box'
+    elsif v_config['operatingsystem'].downcase == 'ubuntu'
+      os_name = 'precise64'
+      config.vm.box     = 'precise64'
+      config.vm.box_url = 'http://files.vagrantup.com/precise64.box'
     else
-      raise(Exception, "undefined operatingsystem: #{ENV['OPERATINGSYSTEM']}")
+      raise(Exception, "undefined operatingsystem: #{v_config['operatingsystem']}")
     end
-  else
-    os_name = 'precise64'
-    config.vm.box     = 'precise64'
-    config.vm.box_url = 'http://files.vagrantup.com/precise64.box'
   end
 
   ssh_forward_port = 2244
@@ -112,7 +119,7 @@ Vagrant::Config.run do |config|
       #agent.vm.customize ["modifyvm", :id, "--macaddress3", 'auto']
 
       agent.vm.customize ["modifyvm", :id, "--memory", props['memory'] || 2048 ]
-      agent.vm.boot_mode = 'gui' if gui_mode
+      agent.vm.boot_mode = 'gui' if v_config['gui_mode'] == 'true'
       agent.vm.customize ["modifyvm", :id, "--name", "#{name}.puppetlabs.lan"]
       agent.vm.host_name = "#{name.gsub('_', '-')}.puppetlabs.lan"
 
@@ -128,13 +135,15 @@ Vagrant::Config.run do |config|
         puppet.manifests_path = 'manifests'
         puppet.manifest_file  = "setup/#{os_name}.pp"
         puppet.module_path    = 'modules'
-        puppet.options = ['--verbose', '--show_diff',  "--certname=#{node_name}"]
+        #puppet.options = ['--verbose', '--show_diff',  "--certname=#{node_name}"]
+        puppet.options = ["--certname=#{node_name}"]
       end
       agent.vm.provision :puppet do |puppet|
         puppet.manifests_path = 'manifests'
         puppet.manifest_file  = 'site.pp'
         puppet.module_path    = 'modules'
-        puppet.options = ['--verbose', '--show_diff', "--certname=#{node_name}"]
+        #puppet.options = ['--verbose', '--show_diff', "--certname=#{node_name}"]
+        puppet.options = ["--certname=#{node_name}"]
       end
     end
   end

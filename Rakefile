@@ -1,44 +1,22 @@
 require 'yaml'
 require 'rubygems'
 
-
-def cmd_system (cmd)
-  result = system cmd
-  raise(RuntimeError, $?) unless $?.success?
-  result
+def base_dir
+  File.expand_path(File.dirname(__FILE__))
 end
 
-def git_cmd(cmd)
-  command = 'git ' + cmd
-  Open3.popen3(*command) do |i, o, e, t|
-    raise StandardError, e.read unless (t ? t.value : $?).success?
-    o.read.split("\n")
-  end
+require File.join(base_dir, 'lib', 'puppetlabs', 'os_tester')
+
+include Puppetlabs::OsTester
+
+def github_password
+  YAML.load_file(File.join(base_dir, '.github_auth'))['password']
 end
 
-def on_box (box, cmd)
-  cmd_system("vagrant ssh #{box} -c '#{cmd}'")
+def github_login
+  YAML.load_file(File.join(base_dir, '.github_auth'))['login']
 end
 
-# bring vagrant vm with image name up
-def build(instance, env)
-  unless vm = env.vms[instance]
-    puts "invalid VM: #{instance}"
-  else
-    if vm.created?
-      puts "VM: #{instance} was already created"
-    else
-      # be very fault tolerant :)
-      begin
-        # this will always fail
-        vm.up(:provision => true)
-      rescue Exception => e
-        puts e.class
-        puts e
-      end
-    end
-  end
-end
 
 namespace :openstack do
 
@@ -47,74 +25,36 @@ namespace :openstack do
     cmd_system('librarian-puppet install')
   end
 
+  desc 'destroy all vms'
   task 'destroy' do
-    require 'vagrant'
-    env = Vagrant::Environment.new(:cwd => File.dirname(__FILE__), :ui_class => Vagrant::UI::Colored)
-
-    puts "About to destroy all vms..."
-    env.cli('vagrant destroy -f')
-    puts "Destroyed all vms"
+    destroy_all_vms
   end
 
   desc 'deploys the entire environment'
   task :deploy_two_node do
-    require 'vagrant'
-    env = Vagrant::Environment.new(:cwd => File.dirname(__FILE__), :ui_class => Vagrant::UI::Colored)
-    build(:openstack_controller, env)
-    build(:compute1, env)
+    deploy_two_node
   end
 
 end
 
 
-remote_name = 'bodepd'
-
 namespace :git do
 
-  cwd = File.expand_path(File.dirname(__FILE__))
+  cwd = base_dir
 
   desc 'for all repos in the module directory, add a read/write remote'
   task :dev_setup do
-
-    each_repo do |module_name|
-      # need to handle more failure cases
-      remotes = git_cmd('remote')
-      if remotes.include?(remote_name)
-        puts "Did not have to add remote #{remote_name} to #{module_name}"
-      elsif ! remotes.include?('origin')
-        raise(Exception, "Repo #{module_name} has no remote called origin, failing")
-      else
-        remote_url = git_cmd('remote show origin').detect {|x| x =~ /\s+Push\s+URL: / }
-        if remote_url =~ /(git|https?):\/\/(.+)\/(.+)?\/(.+)/
-          url = "git@#{$2}:#{remote_name}/#{$4}"
-        else
-          puts "remote_url #{remote_url} did not have the expected format. weird..."
-        end
-        puts "Adding remote #{remote_name} as #{url}"
-        git_cmd("remote add #{remote_name} #{url}")
-      end
-    end
+    dev_setup(github_login)
   end
 
   desc 'pull the latest version of all code'
   task :pull_all do
-    each_repo do |module_name|
-      puts "Pulling repo: #{module_name}"
-      puts '  ' + git_cmd('pull').join("\n  ")
-    end
+    pull_all
   end
 
   desc 'shows the current state of code that has not been commited'
   task :status_all do
-    each_repo do |module_name|
-      status = git_cmd('status')
-      if status.include?('nothing to commit (working directory clean)')
-        puts "Module #{module_name} has not changed" if verbose
-      else
-        puts "Uncommitted changes for: #{module_name}"
-        puts "  #{status.join("\n  ")}"
-      end
-    end
+    status_all
   end
 
   desc 'make sure that the current version from the module file matches the last tagged version'
@@ -122,28 +62,12 @@ namespace :git do
     # I need to be able to return this as a data structure
     # when I start to do more complicated things like
     # automated releases, I will need this data
-    each_repo do |module_name|
-      require 'puppet'
-      if ! args.project_name || args.project_name == module_name
-        modulefile = File.join(Dir.getwd, 'Modulefile')
-        if File.exists?(modulefile)
-          print module_name
-          metadata  = ::Puppet::ModuleTool::Metadata.new
-          ::Puppet::ModuleTool::ModulefileReader.evaluate(metadata, modulefile)
-          print ':' + metadata.version
-          branch_output = git_cmd('branch')
-          if branch_output.first =~ /\* (.+)/
-            puts ":#{$1}"
-            puts '  ' + git_cmd("log #{metadata.version}..HEAD --oneline").join("\n  ")
-            puts ''
-          else
-            puts '  ' + branch_output.join("\n  ")
-          end
-        else
-          puts "#{module_name} does not have a Modulefile"
-        end
-      end
-    end
+    check_tags(args.project_name)
+  end
+
+  desc 'make sure that the current version from the module file matches the last tagged version'
+  task :check_all_tags do
+    check_tags
   end
 
   task :check_sha_all do
@@ -166,135 +90,71 @@ namespace :git do
   end
 end
 
-# list of users that can approve PRs that should run through the integration
-# tests
-admin_users         = ['bodepd']
-test_with_this_body = 'test_it'
 
 namespace :github do
 
   desc 'pick a single pull request to test. Accepts the project name and number of PR to test'
     # you can also specify the OPERATINGSYSTEM to test as an ENV variable
-  task :test_pull_request, [:project_name, :number] do |t, args|
-    # TODO - this is way too much overhead, I am reusing each_repo,
-    # but I should write some kind of repo select
-    each_repo do |repo_name|
-      #require 'ruby-debug';debugger
-      if repo_name == args.project_name
-        require 'curb'
-        require 'json'
-        project_url = "https://api.github.com/repos/puppetlabs/puppetlabs-#{args.project_name}"
-        pull_request_url = "#{project_url}/pulls/#{args.number}"
-        resp = Curl.get(pull_request_url)
-        pr   = JSON.parse(resp.body_str)
-
-        if ! pr['merged']
-          if pr['mergeable']
-            if pr['comments'] > 0
-              resp = Curl.get("#{project_url}/issues/#{args.number}/comments")
-              comments = JSON.parse(resp.body_str)
-              puts 'going through comments'
-              comments.each do |comment|
-                if admin_users.include?(comment['user']['login'])
-                  if comment['body'] == 'test_it'
-                    require 'ruby-debug';debugger
-                    clone_url   = pr['head']['repo']['clone_url']
-                    remote_name = pr['head']['user']['login']
-                    sha         = pr['head']['sha']
-                    puts 'found one that we should test'
-                    # TODO I am not sure how reliable all of this is going
-                    # to be
-                    remotes = git_cmd('remote')
-                    if remotes.include?(remote_name)
-                      git_cmd("fetch #{remote_name}")
-                    else
-                      git_cmd("remote add #{remote_name} #{clone_url}}")
-                    end
-                    git_cmd("checkout #{sha}")
-                  end
-                end
-              end
-            else
-              puts "PR: #{args.number} from #{args.project_name} has no commits.\
-              I will not test it. We only test things approved.
-              "
-            end
-          else
-            puts "PR: #{args.number} from #{args.project_name} cannot be merged, will not test"
-          end
-        else
-          puts "PR: #{args.number} from #{args.project_name} was already merged, will not test"
-        end
-      end
-    end
-    #GET /repos/:owner/:repo/pulls/:number/comments
+  task :checkout_pull_request, [:project_name, :number] do |t, args|
+    checkout_pr(
+      args.project_name,
+      args.number,
+      [github_login],
+      'test_it',
+      {
+        :login    => github_login,
+        :password => github_password
+      }
+    )
   end
 
 end
 
 namespace :test do
 
-  desc 'test openstack with basic test script'
+  desc 'checkout and test a pull request, publish the results'
+  task 'pull_request', [:project_name, :number] do |t, args|
+    require 'vagrant'
+    require 'github_api'
+    $stdout.reopen("my.log", "w")
+    $stdout.sync = true
+    $stderr.reopen($stdout)
+    refresh_modules
+    checkout_pr(
+      args.project_name,
+      args.number,
+      [github_login],
+      'test_it',
+      {
+        :login    => github_login,
+        :password => github_password
+      }
+    )
+    test_two_node(['redhat', 'ubuntu'])
+    results = File.read('my.log')
+    publish_results(
+      args.project_name,
+      args.number,
+      results,
+      {
+        :login    => github_login,
+        :password => github_password
+      }
+    )
+  end
+
+  desc 'test openstack with basic test script on redhat and ubuntu'
   task 'two_node' do
-    #Rake::Task['openstack:setup'.to_sym].invoke
-    Rake::Task['openstack:deploy_two_node'.to_sym].invoke
-    on_box('openstack_controller', 'sudo bash /tmp/test_nova.sh;exit $?')
+    test_two_node(['redhat', 'ubunut'])
   end
 
-  task :test do
+  desc 'test all in one deployment on redhat/ubuntu (not yet implemented)'
+  task 'all_in_one' do
+
+  end
+
+  desc 'test that openstack can boot an image from the vagrant bog'
+  task :controller_test do
     on_box('openstack_controller', 'sudo bash /tmp/foo.sh')
-  end
-end
-
-def contributor_hash
-  repos_i_care_about = ['nova', 'glance', 'openstack', 'keystone', 'swift', 'horizon', 'cinder']
-  contributors = {}
-  each_repo do |module_name|
-    if repos_i_care_about.include?(module_name)
-      logs = git_cmd('log --format=short')
-      user_lines = logs.select {|x| x =~ /^Author:\s+(.*)$/ }
-      user_lines.collect do |x|
-        if x =~ /^Author:\s+(.*)?\s+<((\S+)@(\S+))>$/
-          unless ['root', 'vagrant', 'Dan'].include?($1)
-            if contributors[$1]
-              contributors[$1][:repos] = contributors[$1][:repos] | [module_name]
-            else
-              contributors[$1] = {:email => $2, :repos => [module_name] }
-            end
-          else
-            # trimming out extra users
-          end
-        else
-          puts "Skipping unexpected line #{x}"
-        end
-      end
-    end
-  end
-  contributors
-end
-
-
-def each_repo(&block)
-  require 'librarian/puppet'
-  require 'librarian/puppet/source/git'
-  # create a manifest
-  # TODO replace this to use librarian puppet
-  env = Librarian::Puppet::Environment.new()
-  # this is the lock file, so it assumes that install has been run
-  env.lock.manifests.each do |manifest|
-    # I only care about git sources
-    if manifest.source.is_a? Librarian::Puppet::Source::Git
-      module_name = manifest.name.split('/', 2)[1]
-      module_path = File.join(env.install_path,module_name)
-      if File.directory?(module_path)
-        Dir.chdir(module_path) do
-          yield module_name
-        end
-      else
-        puts "Module directory #{module_path} does not exist... How strange."
-      end
-    else
-      puts "Found a non-git manifest: #{manifest.class}, ignoring"
-    end
   end
 end
