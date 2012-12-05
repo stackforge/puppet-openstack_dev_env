@@ -22,32 +22,6 @@ module Puppetlabs
       cmd_system("vagrant ssh #{box} -c '#{cmd}'")
     end
 
-    def deploy_two_node
-      require 'vagrant'
-      env = Vagrant::Environment.new(:cwd => base_dir, :ui_class => Vagrant::UI::Colored)
-      build(:openstack_controller, env)
-      build(:compute1, env)
-    end
-
-    # bring vagrant vm with image name up
-    def build(instance, env)
-      unless vm = env.vms[instance]
-        puts "invalid VM: #{instance}"
-      else
-        if vm.created?
-          puts "VM: #{instance} was already created"
-        else
-          # be very fault tolerant :)
-          begin
-            # this will always fail
-            vm.up(:provision => true)
-          rescue Exception => e
-            puts e.class
-            puts e
-          end
-        end
-      end
-    end
 
     def each_repo(&block)
       require 'librarian/puppet'
@@ -182,6 +156,11 @@ module Puppetlabs
 
     # given a pull request, return true if we should test it.
     # this means that is can be merged, and has a comment where one of the admin users
+
+    def deploy_two_node
+      cmd_system('vagrant up openstack_controller')
+      cmd_system('vagrant up compute1')
+    end
     # has specified the expected body.
     def testable_pull_request?(
       pr,
