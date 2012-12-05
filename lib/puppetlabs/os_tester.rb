@@ -264,6 +264,27 @@ module Puppetlabs
       end
     end
 
+    # publish a string as a gist.
+    # publish a link to that gist as a issue comment.
+    def publish_results(project_name, number, body, options)
+      require 'github_api'
+      github = Github.new(options)
+      gist_response = github.gists.create(
+        'description' => "#{project_name}/#{number}@#{Time.now.strftime("%Y%m%dT%H%M%S%z")}",
+        'public'      => true,
+        'files' => {
+          'file1' => {'content' => body}
+        }
+      )
+      comments = github.issues.comments.create(
+        'puppetlabs',
+        "puppetlabs-#{project_name}",
+        number,
+        'body' => "Test results can be found here: #{gist_response.html_url}"
+      )
+    end
+
+
     def test_two_node(oses = [])
       require 'yaml'
       #Rake::Task['openstack:setup'.to_sym].invoke
