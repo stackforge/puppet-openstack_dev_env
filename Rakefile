@@ -112,6 +112,37 @@ end
 
 namespace :test do
 
+  desc 'checkout and test a pull request, publish the results'
+  task 'pull_request', [:project_name, :number] do |t, args|
+    require 'vagrant'
+    require 'github_api'
+    $stdout.reopen("my.log", "w")
+    $stdout.sync = true
+    $stderr.reopen($stdout)
+    refresh_modules
+    checkout_pr(
+      args.project_name,
+      args.number,
+      [github_login],
+      'test_it',
+      {
+        :login    => github_login,
+        :password => github_password
+      }
+    )
+    test_two_node(['redhat', 'ubuntu'])
+    results = File.read('my.log')
+    publish_results(
+      args.project_name,
+      args.number,
+      results,
+      {
+        :login    => github_login,
+        :password => github_password
+      }
+    )
+  end
+
   desc 'test openstack with basic test script on redhat and ubuntu'
   task 'two_node' do
     test_two_node(['redhat', 'ubunut'])
