@@ -9,6 +9,14 @@ require File.join(base_dir, 'lib', 'puppetlabs', 'os_tester')
 
 include Puppetlabs::OsTester
 
+def github_password
+  YAML.load_file(File.join(base_dir, '.github_auth'))['password']
+end
+
+def github_login
+  YAML.load_file(File.join(base_dir, '.github_auth'))['login']
+end
+
 
 namespace :openstack do
 
@@ -34,9 +42,9 @@ namespace :git do
 
   cwd = base_dir
 
-  desc 'for all repos in the module directory, add a read/write remote (hardcoded to bodepd)'
+  desc 'for all repos in the module directory, add a read/write remote'
   task :dev_setup do
-    dev_setup('bodped')
+    dev_setup(github_login)
   end
 
   desc 'pull the latest version of all code'
@@ -87,8 +95,17 @@ namespace :github do
 
   desc 'pick a single pull request to test. Accepts the project name and number of PR to test'
     # you can also specify the OPERATINGSYSTEM to test as an ENV variable
-  task :test_pull_request, [:project_name, :number] do |t, args|
-    checkout_pr(args.project_name, args.number, ['bodepd'], 'test_it')
+  task :checkout_pull_request, [:project_name, :number] do |t, args|
+    checkout_pr(
+      args.project_name,
+      args.number,
+      [github_login],
+      'test_it',
+      {
+        :login    => github_login,
+        :password => github_password
+      }
+    )
   end
 
 end
