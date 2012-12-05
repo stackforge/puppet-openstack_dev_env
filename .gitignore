@@ -5,3 +5,5 @@ Puppetfile.lock
 .tmp
 .github_auth
 .current_testing
+my.log
+*swp
