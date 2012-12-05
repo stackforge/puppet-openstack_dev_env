@@ -22,69 +22,12 @@ module Puppetlabs
       cmd_system("vagrant ssh #{box} -c '#{cmd}'")
     end
 
-
-    def each_repo(&block)
-      require 'librarian/puppet'
-      require 'librarian/puppet/source/git'
-      # create a manifest
-      # TODO replace this to use librarian puppet
-      env = Librarian::Puppet::Environment.new()
-      # this is the lock file, so it assumes that install has been run
-      env.lock.manifests.each do |manifest|
-        # I only care about git sources
-        if manifest.source.is_a? Librarian::Puppet::Source::Git
-          module_name = manifest.name.split('/', 2)[1]
-          module_path = File.join(env.install_path,module_name)
-          if File.directory?(module_path)
-            Dir.chdir(module_path) do
-              yield module_name
-            end
-          else
-            puts "Module directory #{module_path} does not exist... How strange."
-          end
-        else
-          puts "Found a non-git manifest: #{manifest.class}, ignoring"
-        end
-      end
-    end
-
-
-    def contributor_hash(
-      repos_i_care_about = ['nova', 'glance', 'openstack', 'keystone', 'swift', 'horizon', 'cinder']
-    )
-      contributors = {}
-      each_repo do |module_name|
-        if repos_i_care_about.include?(module_name)
-          logs = git_cmd('log --format=short')
-          user_lines = logs.select {|x| x =~ /^Author:\s+(.*)$/ }
-          user_lines.collect do |x|
-            if x =~ /^Author:\s+(.*)?\s+<((\S+)@(\S+))>$/
-              unless ['root', 'vagrant', 'Dan'].include?($1)
-                if contributors[$1]
-                  contributors[$1][:repos] = contributors[$1][:repos] | [module_name]
-                else
-                  contributors[$1] = {:email => $2, :repos => [module_name] }
-                end
-              else
-                # trimming out extra users
-              end
-            else
-              puts "Skipping unexpected line #{x}"
-            end
-          end
-        end
-      end
-      contributors
-    end
-
-
     # destroy all vagrant instances
     def destroy_all_vms
       puts "About to destroy all vms..."
       cmd_system('vagrant destroy -f')
       puts "Destroyed all vms"
     end
-
 
     # adds the specified remote name as a read/write remote
     def dev_setup(remote_name)
@@ -167,6 +110,61 @@ module Puppetlabs
       cmd_system('librarian-puppet install')
       FileUtils.rm(checkedout_file)
     end
+
+    def each_repo(&block)
+      require 'librarian/puppet'
+      require 'librarian/puppet/source/git'
+      # create a manifest
+      # TODO replace this to use librarian puppet
+      env = Librarian::Puppet::Environment.new()
+      # this is the lock file, so it assumes that install has been run
+      env.lock.manifests.each do |manifest|
+        # I only care about git sources
+        if manifest.source.is_a? Librarian::Puppet::Source::Git
+          module_name = manifest.name.split('/', 2)[1]
+          module_path = File.join(env.install_path,module_name)
+          if File.directory?(module_path)
+            Dir.chdir(module_path) do
+              yield module_name
+            end
+          else
+            puts "Module directory #{module_path} does not exist... How strange."
+          end
+        else
+          puts "Found a non-git manifest: #{manifest.class}, ignoring"
+        end
+      end
+    end
+
+
+    def contributor_hash(
+      repos_i_care_about = ['nova', 'glance', 'openstack', 'keystone', 'swift', 'horizon', 'cinder']
+    )
+      contributors = {}
+      each_repo do |module_name|
+        if repos_i_care_about.include?(module_name)
+          logs = git_cmd('log --format=short')
+          user_lines = logs.select {|x| x =~ /^Author:\s+(.*)$/ }
+          user_lines.collect do |x|
+            if x =~ /^Author:\s+(.*)?\s+<((\S+)@(\S+))>$/
+              unless ['root', 'vagrant', 'Dan'].include?($1)
+                if contributors[$1]
+                  contributors[$1][:repos] = contributors[$1][:repos] | [module_name]
+                else
+                  contributors[$1] = {:email => $2, :repos => [module_name] }
+                end
+              else
+                # trimming out extra users
+              end
+            else
+              puts "Skipping unexpected line #{x}"
+            end
+          end
+        end
+      end
+      contributors
+    end
+
 
     # has specified the expected body.
     def testable_pull_request?(
