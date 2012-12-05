@@ -186,69 +186,84 @@ module Puppetlabs
     def testable_pull_request?(
       pr,
       admin_users,
-      project_base_url = 'https://api.github.com/repos/puppetlabs/',
-      expected_body = 'test_it'
+      expected_body = 'test_it',
+      options       = {}
     )
-      project_url = project_base_url + pr['base']['repo']['name']
       if ! pr['merged']
         if pr['mergeable']
           if pr['comments'] > 0
-            resp = Curl.get("#{project_url}/issues/#{pr['number']}/comments")
-            comments = JSON.parse(resp.body_str)
+            comments = Github.new(options).issues.comments.all(
+              pr['base']['user']['login'],
+              pr['base']['repo']['name'],
+              pr['number']
+            )
             puts 'going through comments'
             comments.each do |comment|
               if admin_users.include?(comment['user']['login'])
                 if comment['body'] == expected_body
                   return true
                 end
-              else
               end
             end
           else
-            puts "PR: #{pr['number']} from #{project_name} has no commits.\
+            puts "PR: #{pr['number']} from #{pr['base']['repo']['name']} has no issue commments.\
             I will not test it. We only test things approved.
             "
           end
         else
-          puts "PR: #{pr['number']} from #{project_name} cannot be merged, will not test"
+          puts "PR: #{pr['number']} from #{pr['base']['repo']['name']} cannot be merged, will not test"
         end
       else
-        puts "PR: #{pr['number']} from #{project_name} was already merged, will not test"
+        puts "PR: #{pr['number']} from #{pr['base']['repo']['name']} was already merged, will not test"
       end
       return false
     end
 
-    def checkout_pr(project_name, number, admin_users, expected_body)
+    def checkedout_file
+      File.join(base_dir, '.current_testing')
+    end
+
+    def checkedout_branch
+      return @checkout_branch_results if @checkout_branch_results_results
+      co_file = checkedout_file
+      if File.exists?(co_file)
+        @checkout_branch_results = YAML.load_file(co_file)
+      else
+        @checkout_branch_results = {}
+      end
+    end
+
+    def write_checkedout_file(project_name, number)
+      File.open(checkedout_file, 'w') do |fh|
+        fh.write({
+          :project => project_name,
+          :number  => number
+        }.to_yaml)
+      end
+    end
+
+    def checkout_pr(project_name, number, admin_users, expected_body, options)
       # but I should write some kind of repo select
       # depends on https://github.com/peter-murach/github
       require 'github_api'
-      require 'curb'
-      require 'json'
 
       each_repo do |repo_name|
         if repo_name == project_name
-          project_url = "https://api.github.com/repos/puppetlabs/puppetlabs-#{project_name}"
-          pull_request_url = "#{project_url}/pulls/#{number}"
-          resp = Curl.get(pull_request_url)
-          pr   = JSON.parse(resp.body_str)
+          pr = Github.new(options).pull_requests.get('puppetlabs', "puppetlabs-#{project_name}", number)
           # need to be able to override this?
-          test_file = File.join(base_dir, '.current_testing')
-          if File.exists?(test_file)
-            loaded_pr = YAML.load_file(test_file)
-            puts "Branch already checked out for testing #{loaded_pr[:project]}/#{loaded_pr[:number]}"
-            exit 1
+          if checkedout_branch[:project]
+            if checkedout_branch[:project] == project_name and checkedout_branch[:number] == number
+              puts "#{project_name}/#{number} already checkout out, not doing it again"
+            else
+              raise(Exception, "Wanted to checkout: #{project_name}/#{number}, but #{checkedout_branch[:project]}/#{checkedout_branch[:number]} was already checked out")
+            end
           end
 
-          if testable_pull_request?(pr, admin_users)
+          if testable_pull_request?(pr, admin_users, options)
             clone_url   = pr['head']['repo']['clone_url']
             remote_name = pr['head']['user']['login']
             sha         = pr['head']['sha']
-            File.open(test_file, 'w') do |fh|
-              fh.write({
-                :project => project_name,
-                :number  => number
-              }.to_yaml)
-            end
+            write_checkedout_file(project_name, number)
             puts 'found one that we should test'
             # TODO I am not sure how reliable all of this is going
             # to be
