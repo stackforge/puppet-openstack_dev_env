@@ -161,6 +161,13 @@ module Puppetlabs
       cmd_system('vagrant up openstack_controller')
       cmd_system('vagrant up compute1')
     end
+
+    def refresh_modules
+      cmd_system('librarian-puppet clean')
+      cmd_system('librarian-puppet install')
+      FileUtils.rm(checkedout_file)
+    end
+
     # has specified the expected body.
     def testable_pull_request?(
       pr,
