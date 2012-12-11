@@ -120,11 +120,9 @@ namespace :test do
 
   desc 'checkout and test a pull request, publish the results'
   task 'pull_request', [:project_name, :number] do |t, args|
-    require 'vagrant'
-    require 'github_api'
-    $stdout.reopen("my.log", "w")
-    $stdout.sync = true
-    $stderr.reopen($stdout)
+    log_dir = File.join(base_dir, 'logs')
+    log_file = File.join(log_dir, "#{Time.now.to_i.to_s}.log")
+    FileUtils.mkdir(log_dir) unless File.exists?(log_dir)
     refresh_modules
     checkout_pr(
       args.project_name,
@@ -136,11 +134,12 @@ namespace :test do
         :password => github_password
       }
     )
-    test_two_node(['redhat', 'ubuntu'])
-    results = File.read('my.log')
+    system "bash -c 'rspec spec/test_two_node.rb;echo $?' 2>&1 | tee #{log_file}"
+    results = File.read(log_file)
     publish_results(
       args.project_name,
       args.number,
+      results.split("\n").last == '0' ? 'passed' : 'failed',
       results,
       {
         :login    => github_login,
