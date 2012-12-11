@@ -21,16 +21,30 @@ module Puppetlabs
       #end
       output
     end
+    def vagrant_command(cmd, box='')
+      require 'vagrant'
+      env = Vagrant::Environment.new(:ui_class => Vagrant::UI::Colored)
+      env.cli(cmd, box)
     end
 
     def on_box (box, cmd)
-      cmd_system("vagrant ssh #{box} -c '#{cmd}'")
+      require 'vagrant'
+      env = Vagrant::Environment.new(:ui_class => Vagrant::UI::Colored)
+      raise("Invalid VM: #{box}") unless vm = env.vms[box.to_sym]
+      raise("VM: #{box} was not already created") unless vm.created?
+      ssh_data = ''
+      #vm.channel.sudo(cmd) do |type, data|
+      vm.channel.execute(cmd) do |type, data|
+        ssh_data = data
+        env.ui.info(ssh_data.chomp, :prefix => false)
+      end
+      ssh_data
     end
 
     # destroy all vagrant instances
     def destroy_all_vms
       puts "About to destroy all vms..."
-      cmd_system('vagrant destroy -f')
+      vagrant_command('destroy -f')
       puts "Destroyed all vms"
     end
 
@@ -106,8 +120,8 @@ module Puppetlabs
     # this means that is can be merged, and has a comment where one of the admin users
 
     def deploy_two_node
-      cmd_system('vagrant up openstack_controller')
-      cmd_system('vagrant up compute1')
+      vagrant_command('up', 'openstack_controller')
+      vagrant_command('up', 'compute1')
     end
 
     def refresh_modules
