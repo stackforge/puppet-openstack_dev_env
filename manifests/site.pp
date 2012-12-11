@@ -70,7 +70,8 @@ node /openstack-controller/ {
 
   # deploy a script that can be used to test nova
   class { 'openstack::test_file':
-    quantum => $use_quantum,
+    quantum    => $use_quantum,
+    sleep_time => 30,
   }
 
   if $::osfamily == 'Debian' {

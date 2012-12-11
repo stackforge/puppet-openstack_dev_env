@@ -4,28 +4,53 @@
 module Puppetlabs
   module OsTester
 
-    def cmd_system (cmd)
-      result = system cmd
-      raise(RuntimeError, $?) unless $?.success?
-      result
+    require 'yaml'
+    require 'github_api'
+    require 'open3'
+
+    class TestException < Exception
     end
 
-    def git_cmd(cmd)
-      command = 'git ' + cmd
-      Open3.popen3(*command) do |i, o, e, t|
-        raise StandardError, e.read unless (t ? t.value : $?).success?
-        o.read.split("\n")
-      end
+    def cmd_system (cmd, print=true)
+      puts "Running cmd: #{Array(cmd).join(' ')}" if print
+      output = `#{cmd}`.split("\n")
+      puts output.join("\n") if print
+      raise(StandardError, "Cmd #{cmd} failed") unless $?.success?
+      #Open3.popen3(*cmd) do |i, o, e, t|
+      #  output = o.read.split("\n")
+      #  raise StandardError, e.read unless (t ? t.value : $?).success?
+      #end
+      output
+    end
+
+    def git_cmd(cmd, print=true)
+      cmd_system('git ' + cmd, print)
+    end
+
+    def vagrant_command(cmd, box='')
+      require 'vagrant'
+      env = Vagrant::Environment.new(:ui_class => Vagrant::UI::Colored)
+      env.cli(cmd, box)
     end
 
     def on_box (box, cmd)
-      cmd_system("vagrant ssh #{box} -c '#{cmd}'")
+      require 'vagrant'
+      env = Vagrant::Environment.new(:ui_class => Vagrant::UI::Colored)
+      raise("Invalid VM: #{box}") unless vm = env.vms[box.to_sym]
+      raise("VM: #{box} was not already created") unless vm.created?
+      ssh_data = ''
+      #vm.channel.sudo(cmd) do |type, data|
+      vm.channel.execute(cmd) do |type, data|
+        ssh_data = data
+        env.ui.info(ssh_data.chomp, :prefix => false)
+      end
+      ssh_data
     end
 
     # destroy all vagrant instances
     def destroy_all_vms
       puts "About to destroy all vms..."
-      cmd_system('vagrant destroy -f')
+      vagrant_command('destroy -f')
       puts "Destroyed all vms"
     end
 
@@ -37,7 +62,7 @@ module Puppetlabs
         if remotes.include?(remote_name)
           puts "Did not have to add remote #{remote_name} to #{module_name}"
         elsif ! remotes.include?('origin')
-          raise(Exception, "Repo #{module_name} has no remote called origin, failing")
+          raise(TestException, "Repo #{module_name} has no remote called origin, failing")
         else
           remote_url = git_cmd('remote show origin').detect {|x| x =~ /\s+Push\s+URL: / }
           if remote_url =~ /(git|https?):\/\/(.+)\/(.+)?\/(.+)/
@@ -101,14 +126,18 @@ module Puppetlabs
     # this means that is can be merged, and has a comment where one of the admin users
 
     def deploy_two_node
-      cmd_system('vagrant up openstack_controller')
-      cmd_system('vagrant up compute1')
+      vagrant_command('up', 'openstack_controller')
+      vagrant_command('up', 'compute1')
     end
 
     def refresh_modules
-      cmd_system('librarian-puppet clean')
+      ['modules', '.librarian', 'Puppetfile.lock', '.tmp', checkedoutfile_name].each do |dir|
+        if File.exists?(File.join(base_dir, dir ))
+          FileUtils.rm_rf(File.join(base_dir, dir))
+        end
+      end
+      FileUtils.rm(checkedout_file) if File.exists?(checkedout_file)
       cmd_system('librarian-puppet install')
-      FileUtils.rm(checkedout_file)
     end
 
     def each_repo(&block)
@@ -143,7 +172,7 @@ module Puppetlabs
       contributors = {}
       each_repo do |module_name|
         if repos_i_care_about.include?(module_name)
-          logs = git_cmd('log --format=short')
+          logs = git_cmd('log --format=short', print=false)
           user_lines = logs.select {|x| x =~ /^Author:\s+(.*)$/ }
           user_lines.collect do |x|
             if x =~ /^Author:\s+(.*)?\s+<((\S+)@(\S+))>$/
@@ -200,11 +229,16 @@ module Puppetlabs
       else
         puts "PR: #{pr['number']} from #{pr['base']['repo']['name']} was already merged, will not test"
       end
+      puts "Did not find comment matching #{expected_body}"
       return false
     end
 
+    def checkedoutfile_name
+      '.current_testing'
+    end
+
     def checkedout_file
-      File.join(base_dir, '.current_testing')
+      File.join(base_dir, checkedoutfile_name)
     end
 
     def checkedout_branch
@@ -238,15 +272,26 @@ module Puppetlabs
           if checkedout_branch[:project]
             if checkedout_branch[:project] == project_name and checkedout_branch[:number] == number
               puts "#{project_name}/#{number} already checkout out, not doing it again"
+              return
             else
-              raise(Exception, "Wanted to checkout: #{project_name}/#{number}, but #{checkedout_branch[:project]}/#{checkedout_branch[:number]} was already checked out")
+              raise(TestException, "Wanted to checkout: #{project_name}/#{number}, but #{checkedout_branch[:project]}/#{checkedout_branch[:number]} was already checked out")
             end
           end
 
-          if testable_pull_request?(pr, admin_users, options)
+          if testable_pull_request?(pr, admin_users, expected_body, options)
             clone_url   = pr['head']['repo']['clone_url']
             remote_name = pr['head']['user']['login']
             sha         = pr['head']['sha']
+
+            base_ref    = pr['base']['ref']
+            if base_ref != 'master'
+              raise(TestException, "At the moment, I do not support non-master base refs")
+            end
+
+            unless (diffs = git_cmd("diff origin/master")) == []
+              raise(TestException, "There are differences between the current checked out branch and master, you need to clean up these branhces before running any tests\n#{diffs.join("\n")}")
+            end
+
             write_checkedout_file(project_name, number)
             puts 'found one that we should test'
             # TODO I am not sure how reliable all of this is going
@@ -257,7 +302,9 @@ module Puppetlabs
             end
             git_cmd("fetch #{remote_name}")
             # TODO does that work if master has been updated?
-            git_cmd("checkout #{sha}")
+            git_cmd("merge #{sha}")
+          else
+            raise("pull request #{project_name}/#{number} is not testable")
           end
         end
       end
@@ -265,7 +312,7 @@ module Puppetlabs
 
     # publish a string as a gist.
     # publish a link to that gist as a issue comment.
-    def publish_results(project_name, number, body, options)
+    def publish_results(project_name, number, outcome, body, options)
       require 'github_api'
       github = Github.new(options)
       gist_response = github.gists.create(
@@ -279,7 +326,7 @@ module Puppetlabs
         'puppetlabs',
         "puppetlabs-#{project_name}",
         number,
-        'body' => "Test results can be found here: #{gist_response.html_url}"
+        'body' => "Test #{outcome}. Results can be found here: #{gist_response.html_url}"
       )
     end
 
@@ -288,14 +335,18 @@ module Puppetlabs
       require 'yaml'
       #Rake::Task['openstack:setup'.to_sym].invoke
       oses.each do |os|
-        cfg = File.join(base_dir, 'config.yaml')
-        yml = YAML.load_file(cfg).merge({'operatingsystem' => os})
-        File.open(cfg, 'w') {|f| f.write(yml.to_yaml) }
+        update_vagrant_os(os)
         cmd_system('vagrant destroy -f')
         deploy_two_node
         # I should check this to see if the last line is cirros
         on_box('openstack_controller', 'sudo bash /tmp/test_nova.sh;exit $?')
       end
+    end
+
+    def update_vagrant_os(os)
+      cfg = File.join(base_dir, 'config.yaml')
+      yml = YAML.load_file(cfg).merge({'operatingsystem' => os})
+      File.open(cfg, 'w') {|f| f.write(yml.to_yaml) }
     end
 
     # iterate through each testable pull request

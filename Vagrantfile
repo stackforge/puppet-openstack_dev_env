@@ -5,7 +5,7 @@ def parse_vagrant_config(
   config = {'gui_mode' => "false", 'operatingsystem' => 'ubuntu'}
   if File.exists?(config_file)
     overrides = YAML.load_file(config_file)
-    config.merge(overrides)
+    config.merge!(overrides)
   end
   config
 end
