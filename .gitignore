@@ -7,3 +7,4 @@ Puppetfile.lock
 .current_testing
 my.log
 *swp
+logs
