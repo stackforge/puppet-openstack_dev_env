@@ -151,7 +151,7 @@ namespace :test do
 
   desc 'test openstack with basic test script on redhat and ubuntu'
   task 'two_node' do
-    test_two_node(['redhat', 'ubunut'])
+    test_two_node(['redhat', 'ubuntu'])
   end
 
   desc 'test all in one deployment on redhat/ubuntu (not yet implemented)'
