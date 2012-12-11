@@ -229,11 +229,16 @@ module Puppetlabs
       else
         puts "PR: #{pr['number']} from #{pr['base']['repo']['name']} was already merged, will not test"
       end
+      puts "Did not find comment matching #{expected_body}"
       return false
     end
 
+    def checkedoutfile_name
+      '.current_testing'
+    end
+
     def checkedout_file
-      File.join(base_dir, '.current_testing')
+      File.join(base_dir, checkedoutfile_name)
     end
 
     def checkedout_branch
@@ -267,15 +272,26 @@ module Puppetlabs
           if checkedout_branch[:project]
             if checkedout_branch[:project] == project_name and checkedout_branch[:number] == number
               puts "#{project_name}/#{number} already checkout out, not doing it again"
+              return
             else
-              raise(Exception, "Wanted to checkout: #{project_name}/#{number}, but #{checkedout_branch[:project]}/#{checkedout_branch[:number]} was already checked out")
+              raise(TestException, "Wanted to checkout: #{project_name}/#{number}, but #{checkedout_branch[:project]}/#{checkedout_branch[:number]} was already checked out")
             end
           end
 
-          if testable_pull_request?(pr, admin_users, options)
+          if testable_pull_request?(pr, admin_users, expected_body, options)
             clone_url   = pr['head']['repo']['clone_url']
             remote_name = pr['head']['user']['login']
             sha         = pr['head']['sha']
+
+            base_ref    = pr['base']['ref']
+            if base_ref != 'master'
+              raise(TestException, "At the moment, I do not support non-master base refs")
+            end
+
+            unless (diffs = git_cmd("diff origin/master")) == []
+              raise(TestException, "There are differences between the current checked out branch and master, you need to clean up these branhces before running any tests\n#{diffs.join("\n")}")
+            end
+
             write_checkedout_file(project_name, number)
             puts 'found one that we should test'
             # TODO I am not sure how reliable all of this is going
@@ -286,7 +302,9 @@ module Puppetlabs
             end
             git_cmd("fetch #{remote_name}")
             # TODO does that work if master has been updated?
-            git_cmd("checkout #{sha}")
+            git_cmd("merge #{sha}")
+          else
+            raise("pull request #{project_name}/#{number} is not testable")
           end
         end
       end
