@@ -4,10 +4,11 @@
 module Puppetlabs
   module OsTester
 
-    def cmd_system (cmd)
-      result = system cmd
-      raise(RuntimeError, $?) unless $?.success?
-      result
+    require 'yaml'
+    require 'github_api'
+    require 'open3'
+
+    class TestException < Exception
     end
 
     def cmd_system (cmd, print=true)
@@ -21,6 +22,11 @@ module Puppetlabs
       #end
       output
     end
+
+    def git_cmd(cmd, print=true)
+      cmd_system('git ' + cmd, print)
+    end
+
     def vagrant_command(cmd, box='')
       require 'vagrant'
       env = Vagrant::Environment.new(:ui_class => Vagrant::UI::Colored)
