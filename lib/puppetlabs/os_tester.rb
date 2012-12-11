@@ -131,9 +131,13 @@ module Puppetlabs
     end
 
     def refresh_modules
-      cmd_system('librarian-puppet clean')
+      ['modules', '.librarian', 'Puppetfile.lock', '.tmp', checkedoutfile_name].each do |dir|
+        if File.exists?(File.join(base_dir, dir ))
+          FileUtils.rm_rf(File.join(base_dir, dir))
+        end
+      end
+      FileUtils.rm(checkedout_file) if File.exists?(checkedout_file)
       cmd_system('librarian-puppet install')
-      FileUtils.rm(checkedout_file)
     end
 
     def each_repo(&block)
