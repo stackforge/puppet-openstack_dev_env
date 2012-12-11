@@ -172,7 +172,7 @@ module Puppetlabs
       contributors = {}
       each_repo do |module_name|
         if repos_i_care_about.include?(module_name)
-          logs = git_cmd('log --format=short')
+          logs = git_cmd('log --format=short', print=false)
           user_lines = logs.select {|x| x =~ /^Author:\s+(.*)$/ }
           user_lines.collect do |x|
             if x =~ /^Author:\s+(.*)?\s+<((\S+)@(\S+))>$/
