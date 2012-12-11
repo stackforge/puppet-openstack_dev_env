@@ -62,7 +62,7 @@ module Puppetlabs
         if remotes.include?(remote_name)
           puts "Did not have to add remote #{remote_name} to #{module_name}"
         elsif ! remotes.include?('origin')
-          raise(Exception, "Repo #{module_name} has no remote called origin, failing")
+          raise(TestException, "Repo #{module_name} has no remote called origin, failing")
         else
           remote_url = git_cmd('remote show origin').detect {|x| x =~ /\s+Push\s+URL: / }
           if remote_url =~ /(git|https?):\/\/(.+)\/(.+)?\/(.+)/
