@@ -294,7 +294,7 @@ module Puppetlabs
 
     # publish a string as a gist.
     # publish a link to that gist as a issue comment.
-    def publish_results(project_name, number, body, options)
+    def publish_results(project_name, number, outcome, body, options)
       require 'github_api'
       github = Github.new(options)
       gist_response = github.gists.create(
@@ -308,7 +308,7 @@ module Puppetlabs
         'puppetlabs',
         "puppetlabs-#{project_name}",
         number,
-        'body' => "Test results can be found here: #{gist_response.html_url}"
+        'body' => "Test #{outcome}. Results can be found here: #{gist_response.html_url}"
       )
     end
 
