@@ -159,8 +159,8 @@ namespace :test do
 
   end
 
-  desc 'test that openstack can boot an image from the vagrant bog'
-  task :controller_test do
-    on_box('openstack_controller', 'sudo bash /tmp/foo.sh')
+  desc 'test that openstack can boot an image from the vagrant box'
+  task :controller do
+    on_box('openstack_controller', 'sudo bash /tmp/test_nova.sh;exit $?')
   end
 end
