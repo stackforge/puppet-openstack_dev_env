@@ -10,12 +10,17 @@ module Puppetlabs
       result
     end
 
-    def git_cmd(cmd)
-      command = 'git ' + cmd
-      Open3.popen3(*command) do |i, o, e, t|
-        raise StandardError, e.read unless (t ? t.value : $?).success?
-        o.read.split("\n")
-      end
+    def cmd_system (cmd, print=true)
+      puts "Running cmd: #{Array(cmd).join(' ')}" if print
+      output = `#{cmd}`.split("\n")
+      puts output.join("\n") if print
+      raise(StandardError, "Cmd #{cmd} failed") unless $?.success?
+      #Open3.popen3(*cmd) do |i, o, e, t|
+      #  output = o.read.split("\n")
+      #  raise StandardError, e.read unless (t ? t.value : $?).success?
+      #end
+      output
+    end
     end
 
     def on_box (box, cmd)
