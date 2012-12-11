@@ -112,6 +112,12 @@ end
 
 namespace :test do
 
+  desc 'reset test environment'
+  task :reset do
+    refresh_modules
+    destroy_all_vms
+  end
+
   desc 'checkout and test a pull request, publish the results'
   task 'pull_request', [:project_name, :number] do |t, args|
     require 'vagrant'
