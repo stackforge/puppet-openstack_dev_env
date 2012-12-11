@@ -288,14 +288,18 @@ module Puppetlabs
       require 'yaml'
       #Rake::Task['openstack:setup'.to_sym].invoke
       oses.each do |os|
-        cfg = File.join(base_dir, 'config.yaml')
-        yml = YAML.load_file(cfg).merge({'operatingsystem' => os})
-        File.open(cfg, 'w') {|f| f.write(yml.to_yaml) }
+        update_vagrant_os(os)
         cmd_system('vagrant destroy -f')
         deploy_two_node
         # I should check this to see if the last line is cirros
         on_box('openstack_controller', 'sudo bash /tmp/test_nova.sh;exit $?')
       end
+    end
+
+    def update_vagrant_os(os)
+      cfg = File.join(base_dir, 'config.yaml')
+      yml = YAML.load_file(cfg).merge({'operatingsystem' => os})
+      File.open(cfg, 'w') {|f| f.write(yml.to_yaml) }
     end
 
     # iterate through each testable pull request
