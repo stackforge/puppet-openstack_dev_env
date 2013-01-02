@@ -4,6 +4,16 @@ This project contains everything that you need to rebuild the
 same development environment that I built initilaly for the
 folsom implementation of the openstack puppet modules.
 
+# build status for all projects:
+
+OpenStack: [![Unit Test Status](https://secure.travis-ci.org/puppetlabs/puppetlabs-openstack.png?branch=master)](http://travis-ci.org/puppetlabs/puppetlabs-openstack)
+Nova: [![Unit Test Status](https://secure.travis-ci.org/puppetlabs/puppetlabs-nova.png?branch=master)](http://travis-ci.org/puppetlabs/puppetlabs-nova)
+Glance: [![Unit Test Status](https://secure.travis-ci.org/puppetlabs/puppetlabs-glance.png?branch=master)](http://travis-ci.org/puppetlabs/puppetlabs-glance)
+Keystone: [![Unit Test Status](https://secure.travis-ci.org/puppetlabs/puppetlabs-keystone.png?branch=master)](http://travis-ci.org/puppetlabs/puppetlabs-keystone)
+Horizon: [![Unit Test Status](https://secure.travis-ci.org/puppetlabs/puppetlabs-horizon.png?branch=master)](http://travis-ci.org/puppetlabs/puppetlabs-horizon)
+Swift: [![Unit Test Status](https://secure.travis-ci.org/puppetlabs/puppetlabs-swift.png?branch=master)](http://travis-ci.org/puppetlabs/puppetlabs-swift)
+Cinder: [![Unit Test Status](https://secure.travis-ci.org/puppetlabs/puppetlabs-cinder.png?branch=master)](http://travis-ci.org/puppetlabs/puppetlabs-cinder)
+
 # prereqs
 
 1. Ensure that you have rake as well as rubygems installed
