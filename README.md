@@ -6,15 +6,14 @@ folsom implementation of the openstack puppet modules.
 
 # build status for all projects:
 
-<table>
-<tr><td>OpenStack</td><td> [![Unit Test Status](https://secure.travis-ci.org/puppetlabs/puppetlabs-openstack.png?branch=master)](http://travis-ci.org/puppetlabs/puppetlabs-openstack)</td></tr>
-<tr><td>Nova</td><td> [![Unit Test Status](https://secure.travis-ci.org/puppetlabs/puppetlabs-nova.png?branch=master)](http://travis-ci.org/puppetlabs/puppetlabs-nova)</td></tr>
-<tr><td>Glance</td><td> [![Unit Test Status](https://secure.travis-ci.org/puppetlabs/puppetlabs-glance.png?branch=master)](http://travis-ci.org/puppetlabs/puppetlabs-glance)</td></tr>
-<tr><td>Keystone</td><td> [![Unit Test Status](https://secure.travis-ci.org/puppetlabs/puppetlabs-keystone.png?branch=master)](http://travis-ci.org/puppetlabs/puppetlabs-keystone)</td></tr>
-<tr><td>Horizon</td><td> [![Unit Test Status](https://secure.travis-ci.org/puppetlabs/puppetlabs-horizon.png?branch=master)](http://travis-ci.org/puppetlabs/puppetlabs-horizon)</td></tr>
-<tr><td>Swift</td><td> [![Unit Test Status](https://secure.travis-ci.org/puppetlabs/puppetlabs-swift.png?branch=master)](http://travis-ci.org/puppetlabs/puppetlabs-swift)</td></tr>
-<tr><td>Cinder</td><td> [![Unit Test Status](https://secure.travis-ci.org/puppetlabs/puppetlabs-cinder.png?branch=master)](http://travis-ci.org/puppetlabs/puppetlabs-cinder)</td></tr>
-</table>
+
+* OpenStack: [![Unit Test Status](https://secure.travis-ci.org/puppetlabs/puppetlabs-openstack.png?branch=master)](http://travis-ci.org/puppetlabs/puppetlabs-openstack)
+* Nova:      [![Unit Test Status](https://secure.travis-ci.org/puppetlabs/puppetlabs-nova.png?branch=master)](http://travis-ci.org/puppetlabs/puppetlabs-nova)
+* Glance:    [![Unit Test Status](https://secure.travis-ci.org/puppetlabs/puppetlabs-glance.png?branch=master)](http://travis-ci.org/puppetlabs/puppetlabs-glance)
+* Keystone:  [![Unit Test Status](https://secure.travis-ci.org/puppetlabs/puppetlabs-keystone.png?branch=master)](http://travis-ci.org/puppetlabs/puppetlabs-keystone)
+* Horizon:   [![Unit Test Status](https://secure.travis-ci.org/puppetlabs/puppetlabs-horizon.png?branch=master)](http://travis-ci.org/puppetlabs/puppetlabs-horizon)
+* Swift:     [![Unit Test Status](https://secure.travis-ci.org/puppetlabs/puppetlabs-swift.png?branch=master)](http://travis-ci.org/puppetlabs/puppetlabs-swift)
+* Cinder:    [![Unit Test Status](https://secure.travis-ci.org/puppetlabs/puppetlabs-cinder.png?branch=master)](http://travis-ci.org/puppetlabs/puppetlabs-cinder)
 
 # prereqs
 
