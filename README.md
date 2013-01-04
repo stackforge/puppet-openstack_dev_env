@@ -95,7 +95,7 @@ Too see a list of the virtual machines that are managed by vagrant, run
 To see a list of all available rake tasks, run:
 (rake tasks have not yet been defined)
 
-    > rake -t
+    > rake -T
 
 Deploy a controller and a compute node:
 
