@@ -30,6 +30,10 @@ virtualbox should be installed
 3. Install librarian-puppet.
 
     > gem install librarian-puppet
+    
+3a. Install github_api.
+
+    > gem install github_api
 
 4. it is strongly recommended that you set up a proxy (like squid!) to speed up perforance
 of package installation.
@@ -45,11 +49,21 @@ Rakefile - stores tasks that can be used to build out openstack environments
 
 Puppetfile - used by librarian puppet to install the required modules
 
-manifests/hosts.pp
+manifests/setup/hosts.pp
 
-stores basic host setup (apt setup, configured to use a proxy)
+stores basic host setup (ip addresses for vagrant targets)
+
+manifests/setup/percise64.pp 
+
+stores apt setup, configured to use a proxy, and folsom package pointer(s)
+
+manifests/setup/centos.pp
+
+stores yum setup, configuration for a local yum repo machine, and folsom package pointer(s)
 
 manifests/site.pp
+
+just what you'd expect it to be.
 
 # installing module deps
 
@@ -58,8 +72,9 @@ manifests/site.pp
 
 # getting started
 
-Configure the hosts.pp file to point to your apt cache
+Configure the precise64.pp file to point to your apt cache
 (or comment out the proxy host and port from the following resource)
+(similar for centos.pp)
 
     class { 'apt':
       proxy_host => '172.16.0.1',
@@ -80,7 +95,7 @@ Too see a list of the virtual machines that are managed by vagrant, run
 To see a list of all available rake tasks, run:
 (rake tasks have not yet been defined)
 
-    > rake -t
+    > rake -T
 
 Deploy a controller and a compute node:
 
