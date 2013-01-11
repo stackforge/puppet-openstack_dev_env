@@ -109,8 +109,8 @@ Vagrant::Config.run do |config|
     raise "Malformed vhost hash" if hash.size > 1
 
     config.vm.define name.intern do |agent|
-      ssh_forward_port = ssh_forward_port + 1
-      agent.vm.forward_port(22, ssh_forward_port)
+      number = props['ip1'].gsub(/\d+\.\d+\.\d+\.(\d+)/, '\1').to_i
+      agent.vm.forward_port(22, ssh_forward_port + number)
       # host only network
       agent.vm.network :hostonly, props['ip1'], :adapter => 2
       agent.vm.network :hostonly, props['ip1'].gsub(/(\d+\.\d+)\.\d+\.(\d+)/) {|x| "#{$1}.1.#{$2}" }, :adapter => 3
