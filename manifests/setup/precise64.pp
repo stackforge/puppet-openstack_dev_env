@@ -32,5 +32,3 @@ exec { '/usr/bin/apt-get update':
 
 # bring up the bridging interface explicitly
 #exec { '/sbin/ifconfig eth2 up': }
-
-node default { }

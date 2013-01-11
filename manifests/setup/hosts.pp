@@ -82,3 +82,4 @@ file_line { 'wgetrc_proxy':
 }
 
 
+node default { }
