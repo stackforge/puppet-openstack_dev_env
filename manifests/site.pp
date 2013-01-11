@@ -307,3 +307,36 @@ node /devstack/ {
 node default {
   notify { $clientcert: }
 }
+
+node puppetmaster {
+
+  $hostname = 'puppetmaster'
+
+  ### Add the puppetlabs repo
+  apt::source { 'puppetlabs':
+    location   => 'http://apt.puppetlabs.com',
+    repos      => 'main',
+    key        => '4BD6EC30',
+    key_server => 'pgp.mit.edu',
+    tag       => ['puppet'],
+  }
+
+  Exec["apt_update"] -> Package <| |>
+
+  class { 'puppet::master':
+    autosign   => true,
+    modulepath => '/etc/puppet/modules-0',
+  }
+
+  class { 'puppetdb':
+    require => Class['puppet::master'],
+  }
+
+  # Configure the puppet master to use puppetdb.
+  class { 'puppetdb::master::config':
+    restart_puppet           => false,
+    puppetdb_startup_timeout => 240,
+    notify                   => Class['apache'],
+  }
+
+}

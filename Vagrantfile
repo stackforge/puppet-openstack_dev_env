@@ -89,6 +89,11 @@ Vagrant::Config.run do |config|
        'ip1'    => '172.16.0.10'
      }
    },
+   { 'puppetmaster'    => {
+       'memory'  => 512,
+       'ip1'     => '172.16.0.31'
+     }
+   },
    { 'openstack_all' => { 'memory' => 2512, 'ip1' => '172.16.0.11'} }
    #{'compute_1'  =>
    #  {'ip1' => '172.16.0.4'}
@@ -123,7 +128,11 @@ Vagrant::Config.run do |config|
       agent.vm.customize ["modifyvm", :id, "--name", "#{name}.puppetlabs.lan"]
       agent.vm.host_name = "#{name.gsub('_', '-')}.puppetlabs.lan"
 
-      node_name = "#{name.gsub('_', '-')}-#{Time.now.strftime('%Y%m%d%m%s')}"
+      if name == 'puppetmaster' || name =~ /^swift/
+        node_name = "#{name.gsub('_', '-')}.puppetlabs.lan"
+      else
+        node_name = "#{name.gsub('_', '-')}-#{Time.now.strftime('%Y%m%d%m%s')}"
+      end
 
       if os_name =~ /precise/
         agent.vm.provision :shell, :inline => "apt-get update"

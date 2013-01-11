@@ -2,7 +2,7 @@
 # specify a connection to the hardcoded puppet master
 #
 host {
-  'puppet':              ip => '172.16.0.2';
+  'puppetmaster':        ip => '172.16.0.31', host_aliases => ['puppetmaster.puppetlabs.lan'];
   'openstackcontroller': ip => '172.16.0.3';
   'compute1':            ip => '172.16.0.4';
   'compute2':            ip => '172.16.0.14';
@@ -23,4 +23,25 @@ file { '/root/run_puppet.sh':
   content =>
 "#!/bin/bash
 puppet apply --modulepath /tmp/vagrant-puppet/modules-0/ --certname ${clientcert} /tmp/vagrant-puppet/manifests/site.pp"
+}
+
+node /puppetmaster/ {
+  Ini_setting {
+    path    => '/etc/puppet/puppet.conf',
+    section => 'main',
+    ensure  => present,
+  }
+
+  ini_setting {'vardir':
+    setting => 'vardir',
+    value   => '/var/lib/puppet/',
+  }
+  ini_setting {'ssldir':
+    setting => 'ssldir',
+    value   => '/var/lib/puppet/ssl/',
+  }
+  ini_setting {'rundir':
+    setting => 'rundir',
+    value   => '/var/run/puppet/',
+  }
 }
