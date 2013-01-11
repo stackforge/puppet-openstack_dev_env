@@ -146,8 +146,11 @@ module Puppetlabs
     # this means that is can be merged, and has a comment where one of the admin users
 
     def deploy_two_node
-      vagrant_command('up', 'openstack_controller')
-      vagrant_command('up', 'compute1')
+      ['openstack_controller', 'compute1'].each do |vm|
+        vagrant_command('up', vm)
+      end
+    end
+
     # provision a list of vms in parallel
     def parallel_provision(vms)
       require 'thread'
