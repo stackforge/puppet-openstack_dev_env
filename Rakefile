@@ -30,9 +30,19 @@ namespace :openstack do
     destroy_all_vms
   end
 
+  desc 'destroy all swift vms'
+  task 'destroy_swift' do
+    destroy_swift_vms
+  end
+
   desc 'deploys the entire environment'
   task :deploy_two_node do
     deploy_two_node
+  end
+
+  desc 'deploy a swift cluster'
+  task :deploy_swift do
+    deploy_swift_cluster
   end
 
 end

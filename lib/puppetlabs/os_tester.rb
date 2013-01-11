@@ -47,11 +47,31 @@ module Puppetlabs
       ssh_data
     end
 
+    def swift_nodes
+      [
+       'swift_storage_1',
+       'swift_storage_2',
+       'swift_storage_3',
+       'swift_proxy',
+       'swift_keystone'
+      ]
+    end
+
     # destroy all vagrant instances
     def destroy_all_vms
       puts "About to destroy all vms..."
       vagrant_command('destroy -f')
       puts "Destroyed all vms"
+    end
+
+    def destroy_swift_vms
+      puts "About to destroy all swift vms..."
+      swift_nodes.each do |x|
+        cmd_system("vagrant destroy #{x} --force")
+      end
+      puts "Destroyed all swift vms"
+      on_box('puppetmaster', 'export RUBYLIB=/etc/puppet/modules-0/ruby-puppetdb/lib/; puppet query node --only-active --deactivate --puppetdb_host=puppetmaster.puppetlabs.lan --puppetdb_port=8081 --config=/etc/puppet/puppet.conf --ssldir=/var/lib/puppet/ssl --certname=puppetmaster.puppetlabs.lan')
+      on_box('puppetmaster', 'rm /var/lib/puppet/ssl/*/swift*;rm /var/lib/puppet/ssl/ca/signed/swift*;')
     end
 
     # adds the specified remote name as a read/write remote
@@ -128,6 +148,53 @@ module Puppetlabs
     def deploy_two_node
       vagrant_command('up', 'openstack_controller')
       vagrant_command('up', 'compute1')
+    # provision a list of vms in parallel
+    def parallel_provision(vms)
+      require 'thread'
+      results = {}
+      threads = []
+      queue = Queue.new
+      vms.each  {|vm| vagrant_command(['up', '--no-provision'], vm) }
+      vms.each do |vm|
+        threads << Thread.new do
+          result = cmd_system("vagrant provision #{vm}")
+          # I cant use a regular vagrant call
+          #result = vagrant_command('provision', vm)
+          queue.push({vm => {'result' => result}})
+        end
+      end
+      threads.each do |aThread|
+        begin
+          aThread.join
+        rescue Exception => spawn_err
+          puts("Failed spawning vagrant provision thread: #{spawn_err}")
+        end
+      end
+      until queue.empty?
+        provision_results = queue.pop
+        results.merge!(provision_results)
+      end
+      results
+    end
+
+    # deploys a 3 node swift cluster in parallel
+    def deploy_swift_cluster
+      vagrant_command('up', 'swift_keystone')
+      parallel_provision(
+        [
+         'swift_storage_1',
+         'swift_storage_2',
+         'swift_storage_3'
+        ]
+      )
+      vagrant_command('up', 'swift_proxy')
+      parallel_provision(
+        [
+         'swift_storage_1',
+         'swift_storage_2',
+         'swift_storage_3'
+        ]
+      )
     end
 
     def refresh_modules

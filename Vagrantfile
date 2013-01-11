@@ -194,12 +194,6 @@ Vagrant::Config.run do |config|
         end
 
       end
-      agent.vm.provision :puppet do |puppet|
-        puppet.manifests_path = 'manifests'
-        puppet.manifest_file  = 'site.pp'
-        puppet.module_path    = 'modules'
-        #puppet.options = ['--verbose', '--show_diff', "--certname=#{node_name}"]
-        puppet.options = ["--certname=#{node_name}"]
 
       # export a data directory that can be used by hiera
       agent.vm.share_folder("hiera_data", '/etc/puppet/hiera_data', './hiera_data/')
