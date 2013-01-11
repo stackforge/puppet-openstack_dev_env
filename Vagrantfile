@@ -94,6 +94,38 @@ Vagrant::Config.run do |config|
        'ip1'    => '172.16.0.10'
      }
    },
+   { 'swift_proxy' => {
+       'memory'   => 512,
+       'ip1'      => '172.16.0.21',
+       'run_mode' => :agent
+     }
+   },
+   { 'swift_storage_1' => {
+       'memory' => 512,
+       'ip1'    => '172.16.0.22',
+       'run_mode' => :agent
+     }
+   },
+   { 'swift_storage_2' => {
+       'memory' => 512,
+       'ip1'    => '172.16.0.23',
+       'run_mode' => :agent
+     }
+   },
+   { 'swift_storage_3' => {
+       'memory' => 512,
+       'ip1'    => '172.16.0.24',
+       'run_mode' => :agent
+     }
+   },
+   # keystone instance to build out for testing swift
+   {
+     'swift_keystone' => {
+       'memory'   => 512,
+       'ip1'      => '172.16.0.25',
+       'run_mode' => :agent
+     }
+   },
    { 'puppetmaster'    => {
        'memory'  => 512,
        'ip1'     => '172.16.0.31'
@@ -140,12 +172,9 @@ Vagrant::Config.run do |config|
         agent.vm.provision :shell, :inline => "yum clean all"
       end
 
-      agent.vm.provision :puppet do |puppet|
-        puppet.manifests_path = 'manifests'
-        puppet.manifest_file  = "setup/#{os_name}.pp"
-        puppet.module_path    = 'modules'
-        #puppet.options = ['--verbose', '--show_diff',  "--certname=#{node_name}"]
-        puppet.options = ["--certname=#{node_name}"]
+      puppet_options = ["--certname=#{node_name}"]
+      puppet_options.merge!({'--verbose', '--show_diff'}) if v_config['verbose']
+
       if v_config['update_repos'] == true
 
         agent.vm.provision(:puppet, :pp_path => "/etc/puppet") do |puppet|
@@ -171,6 +200,10 @@ Vagrant::Config.run do |config|
         puppet.module_path    = 'modules'
         #puppet.options = ['--verbose', '--show_diff', "--certname=#{node_name}"]
         puppet.options = ["--certname=#{node_name}"]
+
+      # export a data directory that can be used by hiera
+      agent.vm.share_folder("hiera_data", '/etc/puppet/hiera_data', './hiera_data/')
+
       run_mode = props['run_mode'] || :apply
 
       if run_mode == :apply

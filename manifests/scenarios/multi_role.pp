@@ -23,7 +23,7 @@ node /mysql/ {
 
 }
 
-node /keystone/ {
+node /^keystone/ {
 
   # TODO keystone logging seems to be totally broken in folsom
   # this can be removed once it starts working

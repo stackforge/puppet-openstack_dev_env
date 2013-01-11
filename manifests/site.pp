@@ -3,7 +3,6 @@
 # basic single and multi-node openstack environments.
 #
 
-
 ####### shared variables ##################
 
 #Exec {
@@ -11,38 +10,37 @@
 #}
 
 # database config
-$mysql_root_password  = 'mysql_root_password'
-$keystone_db_password = 'keystone_db_password'
-$glance_db_password   = 'glance_db_password'
-$nova_db_password     = 'nova_db_password'
-$cinder_db_password   = 'cinder_db_password'
-$quantum_db_password  = 'quantum_db_password'
+$mysql_root_password  = hiera('mysql_root_password', 'mysql_root_password')
+$keystone_db_password = hiera('keystone_db_password', 'keystone_db_password')
+$glance_db_password   = hiera('glance_db_password', 'glance_db_password')
+$nova_db_password     = hiera('nova_db_password', 'nova_db_password')
+$cinder_db_password   = hiera('cinder_db_password', 'cinder_db_password')
+$quantum_db_password  = hiera('quantum_db_password', 'quantum_db_password')
 
-$allowed_hosts        = ['%']
+$allowed_hosts        = hiera('allowed_hosts', ['%'])
 
-# keystone settings
-$admin_token           = 'service_token'
-$admin_email           = 'keystone@localhost'
-$admin_password        = 'ChangeMe'
-$glance_user_password  = 'glance_user_password'
-$nova_user_password    = 'nova_user_password'
-$cinder_user_password  = 'cinder_user_password'
-$quantum_user_password = 'quantum_user_password'
+# keystone settings)
+$admin_token           = hiera('admin_token', 'service_token')
+$admin_email           = hiera('admin_email', 'keystone@localhost')
+$admin_password        = hiera('admin_password', 'ChangeMe')
+$glance_user_password  = hiera('glance_user_password', 'glance_user_password')
+$nova_user_password    = hiera('nova_user_password', 'nova_user_password')
+$cinder_user_password  = hiera('cinder_user_password', 'cinder_user_password')
+$quantum_user_password = hiera('quantum_user_password', 'quantum_user_password')
 
-$verbose = 'True'
+$verbose           = hiera('verbose', 'True')
 
-$public_interface  = 'eth0'
-$private_interface = 'eth2'
+$public_interface  = hiera('public_interface', 'eth0')
+$private_interface = hiera('private_interface', 'eth2')
 
-$rabbit_password   = 'rabbit_password'
-$rabbit_user       = 'nova'
+$rabbit_password   = hiera('rabbit_password', 'rabbit_password')
+$rabbit_user       = hiera('rabbit_user', 'nova')
 
-$secret_key        = 'secret_key'
+$secret_key        = hiera('secret_key', 'secret_key')
 
-$libvirt_type      = 'qemu'
-#$libvirt_type = 'kvm'
-#$network_type      = 'quantum'
-$network_type      = 'nova'
+$libvirt_type      = hiera('libvirt_type', 'qemu')
+#$network_type      = hiera('', 'quantum')
+$network_type      = hiera('', 'nova')
 if $network_type == 'nova' {
   $use_quantum = false
   $multi_host  = true
@@ -50,21 +48,24 @@ if $network_type == 'nova' {
   $use_quantum = true
 }
 
-$fixed_network_range     = '10.0.0.0/24'
-$floating_network_range  = '172.16.0.128/25'
+$fixed_network_range     = hiera('fixed_network_range', '10.0.0.0/24')
+$floating_network_range  = hiera('floating_network_range', '172.16.0.128/25')
 
-$auto_assign_floating_ip = false
+$auto_assign_floating_ip = hiera('auto_assign_floating_ip', false)
 
 #### end shared variables #################
 
 #### controller/compute mode settings ####
-$openstack_controller = '172.16.0.3'
+$openstack_controller = hiera('openstack_controller', '172.16.0.3')
 #### controller/compute mode settings ####
 
 # node declaration for all in one
 import 'scenarios/all_in_one.pp'
 # node declarations for a single server per role
 import 'scenarios/multi_role.pp'
+
+# import external swift definitions
+import '/etc/puppet/modules-0/swift/examples/site.pp'
 
 node /openstack-controller/ {
 

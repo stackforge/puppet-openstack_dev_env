@@ -12,6 +12,10 @@ host {
   'mysql':               ip => '172.16.0.8';
   'cinderclient':        ip => '172.16.0.9';
   'quantumagent':        ip => '172.16.0.10';
+  'swift_proxy':         ip => '172.16.0.21';
+  'swift_storage_1':     ip => '172.16.0.22';
+  'swift_storage_2':     ip => '172.16.0.23';
+  'swift_storage_3':     ip => '172.16.0.24';
 }
 
 group { 'puppet':
