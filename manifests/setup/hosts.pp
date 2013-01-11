@@ -69,3 +69,16 @@ node /puppetmaster/ {
     value   => '/var/run/puppet/',
   }
 }
+
+package { 'wget':
+  ensure => present,
+}
+
+file_line { 'wgetrc_proxy':
+  ensure  => present,
+  line    => "https_proxy = http://172.16.0.1:3128/",
+  path    => '/etc/wgetrc',
+  require => Package['wget'],
+}
+
+
