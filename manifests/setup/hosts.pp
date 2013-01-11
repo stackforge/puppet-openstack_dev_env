@@ -23,6 +23,30 @@ file { '/root/run_puppet.sh':
   content =>
 "#!/bin/bash
 puppet apply --modulepath /tmp/vagrant-puppet/modules-0/ --certname ${clientcert} /tmp/vagrant-puppet/manifests/site.pp"
+package { ['make', 'gcc']:
+  ensure => present,
+} ->
+
+# install hiera
+# TODO pretty sure hiera-puppet is not installed b/c I installed the module
+package { ['hiera', 'hiera-puppet', 'ruby-debug']:
+  ensure   => present,
+  provider => 'gem',
+}
+
+package { 'vim': ensure => present }
+
+file { '/etc/puppet/hiera.yaml':
+  content =>
+'
+---
+:backends:
+  - yaml
+:hierarchy:
+  - "%{hostname}"
+  - common
+:yaml:
+   :datadir: /etc/puppet/hiera_data'
 }
 
 node /puppetmaster/ {
