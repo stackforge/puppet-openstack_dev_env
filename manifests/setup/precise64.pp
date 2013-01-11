@@ -30,5 +30,3 @@ exec { '/usr/bin/apt-get update':
   logoutput   => true,
 }
 
-# bring up the bridging interface explicitly
-#exec { '/sbin/ifconfig eth2 up': }
