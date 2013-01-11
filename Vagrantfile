@@ -2,7 +2,12 @@ def parse_vagrant_config(
   config_file=File.expand_path(File.join(File.dirname(__FILE__), 'config.yaml'))
 )
   require 'yaml'
-  config = {'gui_mode' => "false", 'operatingsystem' => 'ubuntu'}
+  config = {
+    'gui_mode'        => "false",
+    'operatingsystem' => 'ubuntu',
+    'verbose'         => false,
+    'update_repos'    => true
+  }
   if File.exists?(config_file)
     overrides = YAML.load_file(config_file)
     config.merge!(overrides)
@@ -141,6 +146,24 @@ Vagrant::Config.run do |config|
         puppet.module_path    = 'modules'
         #puppet.options = ['--verbose', '--show_diff',  "--certname=#{node_name}"]
         puppet.options = ["--certname=#{node_name}"]
+      if v_config['update_repos'] == true
+
+        agent.vm.provision(:puppet, :pp_path => "/etc/puppet") do |puppet|
+          puppet.manifests_path = 'manifests'
+          puppet.manifest_file  = "setup/#{os_name}.pp"
+          puppet.module_path    = 'modules'
+          puppet.options        = puppet_options
+        end
+
+      else
+
+        agent.vm.provision(:puppet, :pp_path => "/etc/puppet") do |puppet|
+          puppet.manifests_path = 'manifests'
+          puppet.manifest_file  = "setup/hosts.pp"
+          puppet.module_path    = 'modules'
+          puppet.options        = puppet_options
+        end
+
       end
       agent.vm.provision :puppet do |puppet|
         puppet.manifests_path = 'manifests'
