@@ -22,7 +22,9 @@ group { 'puppet':
 file { '/root/run_puppet.sh':
   content =>
 "#!/bin/bash
-puppet apply --modulepath /tmp/vagrant-puppet/modules-0/ --certname ${clientcert} /tmp/vagrant-puppet/manifests/site.pp"
+puppet apply --modulepath /etc/puppet/modules-0/ --certname ${clientcert} /etc/puppet/manifests/site.pp $*"
+}
+
 package { ['make', 'gcc']:
   ensure => present,
 } ->
