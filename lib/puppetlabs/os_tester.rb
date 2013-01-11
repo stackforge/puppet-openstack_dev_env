@@ -40,7 +40,7 @@ module Puppetlabs
       raise("VM: #{box} was not already created") unless vm.created?
       ssh_data = ''
       #vm.channel.sudo(cmd) do |type, data|
-      vm.channel.execute(cmd) do |type, data|
+      vm.channel.sudo(cmd) do |type, data|
         ssh_data = data
         env.ui.info(ssh_data.chomp, :prefix => false)
       end
