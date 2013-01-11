@@ -171,6 +171,26 @@ Vagrant::Config.run do |config|
         puppet.module_path    = 'modules'
         #puppet.options = ['--verbose', '--show_diff', "--certname=#{node_name}"]
         puppet.options = ["--certname=#{node_name}"]
+      run_mode = props['run_mode'] || :apply
+
+      if run_mode == :apply
+
+        agent.vm.provision(:puppet, :pp_path => "/etc/puppet") do |puppet|
+          puppet.manifests_path = 'manifests'
+          puppet.manifest_file  = 'site.pp'
+          puppet.module_path    = 'modules'
+          puppet.options        = puppet_options
+        end
+
+      elsif run_mode == :agent
+
+        agent.vm.provision(:puppet_server) do |puppet|
+          puppet.puppet_server = 'puppetmaster.puppetlabs.lan'
+          puppet.options       = puppet_options + ['-t', '--pluginsync']
+        end
+
+      else
+        puts "Found unexpected run_mode #{run_mode}"
       end
     end
   end
