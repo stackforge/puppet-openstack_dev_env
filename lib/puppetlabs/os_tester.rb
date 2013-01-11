@@ -30,6 +30,7 @@ module Puppetlabs
     def vagrant_command(cmd, box='')
       require 'vagrant'
       env = Vagrant::Environment.new(:ui_class => Vagrant::UI::Colored)
+      puts "Running #{cmd} on #{box ? box : 'all'}"
       env.cli(cmd, box)
     end
 
