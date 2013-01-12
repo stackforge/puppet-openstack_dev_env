@@ -17,6 +17,15 @@ def github_login
   YAML.load_file(File.join(base_dir, '.github_auth'))['login']
 end
 
+def log_file
+  return @log_file if @log_file
+  log_dir  = File.join(base_dir, 'logs')
+  log_file = File.join(log_dir, "#{Time.now.to_i.to_s}.log")
+  FileUtils.mkdir(log_dir) unless File.exists?(log_dir)
+  FileUtils.touch(log_file)
+  @log_file = log_file
+end
+
 
 namespace :openstack do
 
@@ -30,9 +39,19 @@ namespace :openstack do
     destroy_all_vms
   end
 
+  desc 'destroy all swift vms'
+  task 'destroy_swift' do
+    destroy_swift_vms
+  end
+
   desc 'deploys the entire environment'
   task :deploy_two_node do
     deploy_two_node
+  end
+
+  desc 'deploy a swift cluster'
+  task :deploy_swift do
+    deploy_swift_cluster
   end
 
 end
@@ -118,11 +137,14 @@ namespace :test do
     destroy_all_vms
   end
 
+  desc 'Checkout fresh master environment and test a two node deployment'
+  task 'master' do
+    refresh_modules
+    system "bash -c 'rspec spec/test_two_node.rb;echo $?' 2>&1 | tee #{log_file}"
+  end
+
   desc 'checkout and test a pull request, publish the results'
   task 'pull_request', [:project_name, :number] do |t, args|
-    log_dir = File.join(base_dir, 'logs')
-    log_file = File.join(log_dir, "#{Time.now.to_i.to_s}.log")
-    FileUtils.mkdir(log_dir) unless File.exists?(log_dir)
     refresh_modules
     checkout_pr(
       args.project_name,

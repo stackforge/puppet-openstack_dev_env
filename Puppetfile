@@ -28,3 +28,10 @@ mod 'puppetlabs/firewall', :git => 'git://github.com/puppetlabs/puppetlabs-firew
 mod 'ripienaar/concat', :git => 'git://github.com/ripienaar/puppet-concat'
 mod 'duritong/sysctl', :git => 'git://github.com/duritong/puppet-sysctl.git'
 mod 'cprice404/inifile', :git => 'git://github.com/cprice-puppet/puppetlabs-inifile'
+# puppet related modules
+mod ripienaar/hiera_puppet :git => https://github.com/ripienaar/hiera-puppet
+mod 'puppetlabs/ruby'
+mod 'puppet/puppet',         :git => 'git://github.com/stephenrjohnson/puppetlabs-puppet.git'
+mod 'puppet/puppetdb',       :git => 'git://github.com/puppetlabs/puppetlabs-puppetdb.git'
+mod 'puppetlabs/postgresql', :git => 'git://github.com/puppetlabs/puppet-postgresql.git'
+mod 'ripienaar/ruby-puppetdb', :git => 'git://github.com/ripienaar/ruby-puppetdb'

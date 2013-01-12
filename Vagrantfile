@@ -2,7 +2,12 @@ def parse_vagrant_config(
   config_file=File.expand_path(File.join(File.dirname(__FILE__), 'config.yaml'))
 )
   require 'yaml'
-  config = {'gui_mode' => "false", 'operatingsystem' => 'ubuntu'}
+  config = {
+    'gui_mode'        => "false",
+    'operatingsystem' => 'ubuntu',
+    'verbose'         => false,
+    'update_repos'    => true
+  }
   if File.exists?(config_file)
     overrides = YAML.load_file(config_file)
     config.merge!(overrides)
@@ -89,12 +94,44 @@ Vagrant::Config.run do |config|
        'ip1'    => '172.16.0.10'
      }
    },
+   { 'swift_proxy' => {
+       'memory'   => 512,
+       'ip1'      => '172.16.0.21',
+       'run_mode' => :agent
+     }
+   },
+   { 'swift_storage_1' => {
+       'memory' => 512,
+       'ip1'    => '172.16.0.22',
+       'run_mode' => :agent
+     }
+   },
+   { 'swift_storage_2' => {
+       'memory' => 512,
+       'ip1'    => '172.16.0.23',
+       'run_mode' => :agent
+     }
+   },
+   { 'swift_storage_3' => {
+       'memory' => 512,
+       'ip1'    => '172.16.0.24',
+       'run_mode' => :agent
+     }
+   },
+   # keystone instance to build out for testing swift
+   {
+     'swift_keystone' => {
+       'memory'   => 512,
+       'ip1'      => '172.16.0.25',
+       'run_mode' => :agent
+     }
+   },
+   { 'puppetmaster'    => {
+       'memory'  => 512,
+       'ip1'     => '172.16.0.31'
+     }
+   },
    { 'openstack_all' => { 'memory' => 2512, 'ip1' => '172.16.0.11'} }
-   #{'compute_1'  =>
-   #  {'ip1' => '172.16.0.4'}
-   #},
-   #{'compute_2'  =>
-   #  {'ip1' => '172.16.0.5'}
   ].each do |hash|
 
 
@@ -104,8 +141,8 @@ Vagrant::Config.run do |config|
     raise "Malformed vhost hash" if hash.size > 1
 
     config.vm.define name.intern do |agent|
-      ssh_forward_port = ssh_forward_port + 1
-      agent.vm.forward_port(22, ssh_forward_port)
+      number = props['ip1'].gsub(/\d+\.\d+\.\d+\.(\d+)/, '\1').to_i
+      agent.vm.forward_port(22, ssh_forward_port + number)
       # host only network
       agent.vm.network :hostonly, props['ip1'], :adapter => 2
       agent.vm.network :hostonly, props['ip1'].gsub(/(\d+\.\d+)\.\d+\.(\d+)/) {|x| "#{$1}.1.#{$2}" }, :adapter => 3
@@ -123,7 +160,11 @@ Vagrant::Config.run do |config|
       agent.vm.customize ["modifyvm", :id, "--name", "#{name}.puppetlabs.lan"]
       agent.vm.host_name = "#{name.gsub('_', '-')}.puppetlabs.lan"
 
-      node_name = "#{name.gsub('_', '-')}-#{Time.now.strftime('%Y%m%d%m%s')}"
+      if name == 'puppetmaster' || name =~ /^swift/
+        node_name = "#{name.gsub('_', '-')}.puppetlabs.lan"
+      else
+        node_name = "#{name.gsub('_', '-')}-#{Time.now.strftime('%Y%m%d%m%s')}"
+      end
 
       if os_name =~ /precise/
         agent.vm.provision :shell, :inline => "apt-get update"
@@ -131,19 +172,52 @@ Vagrant::Config.run do |config|
         agent.vm.provision :shell, :inline => "yum clean all"
       end
 
-      agent.vm.provision :puppet do |puppet|
-        puppet.manifests_path = 'manifests'
-        puppet.manifest_file  = "setup/#{os_name}.pp"
-        puppet.module_path    = 'modules'
-        #puppet.options = ['--verbose', '--show_diff',  "--certname=#{node_name}"]
-        puppet.options = ["--certname=#{node_name}"]
+      puppet_options = ["--certname=#{node_name}"]
+      puppet_options.merge!({'--verbose', '--show_diff'}) if v_config['verbose']
+
+      if v_config['update_repos'] == true
+
+        agent.vm.provision(:puppet, :pp_path => "/etc/puppet") do |puppet|
+          puppet.manifests_path = 'manifests'
+          puppet.manifest_file  = "setup/#{os_name}.pp"
+          puppet.module_path    = 'modules'
+          puppet.options        = puppet_options
+        end
+
+      else
+
+        agent.vm.provision(:puppet, :pp_path => "/etc/puppet") do |puppet|
+          puppet.manifests_path = 'manifests'
+          puppet.manifest_file  = "setup/hosts.pp"
+          puppet.module_path    = 'modules'
+          puppet.options        = puppet_options
+        end
+
       end
-      agent.vm.provision :puppet do |puppet|
-        puppet.manifests_path = 'manifests'
-        puppet.manifest_file  = 'site.pp'
-        puppet.module_path    = 'modules'
-        #puppet.options = ['--verbose', '--show_diff', "--certname=#{node_name}"]
-        puppet.options = ["--certname=#{node_name}"]
+
+      # export a data directory that can be used by hiera
+      agent.vm.share_folder("hiera_data", '/etc/puppet/hiera_data', './hiera_data/')
+
+      run_mode = props['run_mode'] || :apply
+
+      if run_mode == :apply
+
+        agent.vm.provision(:puppet, :pp_path => "/etc/puppet") do |puppet|
+          puppet.manifests_path = 'manifests'
+          puppet.manifest_file  = 'site.pp'
+          puppet.module_path    = 'modules'
+          puppet.options        = puppet_options
+        end
+
+      elsif run_mode == :agent
+
+        agent.vm.provision(:puppet_server) do |puppet|
+          puppet.puppet_server = 'puppetmaster.puppetlabs.lan'
+          puppet.options       = puppet_options + ['-t', '--pluginsync']
+        end
+
+      else
+        puts "Found unexpected run_mode #{run_mode}"
       end
     end
   end
