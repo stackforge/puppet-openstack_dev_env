@@ -108,7 +108,7 @@ module Puppetlabs
 
     def status_all
       each_repo do |module_name|
-        status = git_cmd('status')
+        status = git_cmd('status', false)
         if status.include?('nothing to commit (working directory clean)')
           puts "Module #{module_name} has not changed" if verbose
         else
