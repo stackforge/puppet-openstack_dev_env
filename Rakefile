@@ -5,7 +5,9 @@ def base_dir
   File.expand_path(File.dirname(__FILE__))
 end
 
-require File.join(base_dir, 'lib', 'puppetlabs', 'os_tester')
+$LOAD_PATH.push("#{base_dir}/lib")
+require 'puppetlabs/os_tester'
+#require File.join(base_dir, 'lib', 'puppetlabs', 'os_tester')
 
 include Puppetlabs::OsTester
 
