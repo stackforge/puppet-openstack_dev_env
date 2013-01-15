@@ -11,6 +11,13 @@ module Puppetlabs
       end
 
       # run a vagrant command
+      # Parameters:
+      #   cmd::
+      #     vagrant command that should be run.
+      #   box::
+      #     box that the command should be applied to.
+      # Return:
+      #  TODO - figire out the return
       def vagrant_command(cmd, box='')
         require 'vagrant'
         env = ::Vagrant::Environment.new(:ui_class => ::Vagrant::UI::Colored)
@@ -19,6 +26,15 @@ module Puppetlabs
       end
 
       # run a command on an image as sudo. return the output
+      # Parameters:
+      #   box::
+      #     box that the command should be applied to.
+      #   cmd::
+      #     command that should be run as sudo on the box.
+      # Returns:
+      #   stdout from the executed ssh command.
+      #
+      # TODO make these two method argument lists consistent
       def on_box (box, cmd)
         require 'vagrant'
         env = ::Vagrant::Environment.new(:ui_class => ::Vagrant::UI::Colored)

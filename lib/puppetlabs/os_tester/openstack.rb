@@ -18,7 +18,17 @@ module Puppetlabs
         end
       end
 
-      # test a controller compute setup
+      # Test a controller compute setup.
+      # deletes all VMs in the current Vagrant project before
+      # building a 2 node openstack environment and firing off
+      # an integration test.
+      #
+      # == Parameters:
+      #   oses::
+      #     A list of operatingsystems that should be tested on.
+      #
+      # == Returns:
+      #   TODO document
       def test_two_node(oses = [])
         require 'yaml'
         #Rake::Task['openstack:setup'.to_sym].invoke
@@ -31,6 +41,16 @@ module Puppetlabs
         end
       end
 
+      # print a hash of all of the contributors
+      # == Parameters:
+      #   repos_i_care_about::
+      #     An Array that specifies a list of repos to check the contributors for.
+      #
+      # == Returns:
+      #    A hash that maps a user to a hash that contains its :email
+      #    and a list of the specified repos that they have
+      #    contribited to
+      #
       def contributor_hash(
         repos_i_care_about = ['nova', 'glance', 'openstack', 'keystone', 'swift', 'horizon', 'cinder']
       )
