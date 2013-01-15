@@ -1,5 +1,3 @@
-require 'puppetlabs/os_tester'
-
 module Puppetlabs
   module OsTester
     module System
