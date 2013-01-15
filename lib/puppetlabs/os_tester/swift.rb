@@ -25,8 +25,11 @@ module Puppetlabs
           cmd_system("vagrant destroy #{x} --force")
         end
         puts "Destroyed all swift vms"
-        on_box('puppetmaster', 'export RUBYLIB=/etc/puppet/modules-0/ruby-puppetdb/lib/; puppet query node --only-active --deactivate --puppetdb_host=puppetmaster.puppetlabs.lan --puppetdb_port=8081 --config=/etc/puppet/puppet.conf --ssldir=/var/lib/puppet/ssl --certname=puppetmaster.puppetlabs.lan')
-        on_box('puppetmaster', 'rm /var/lib/puppet/ssl/*/swift*;rm /var/lib/puppet/ssl/ca/signed/swift*;')
+        begin
+          on_box('puppetmaster', 'export RUBYLIB=/etc/puppet/modules-0/ruby-puppetdb/lib/; puppet query node --only-active --deactivate --puppetdb_host=puppetmaster.puppetlabs.lan --puppetdb_port=8081 --config=/etc/puppet/puppet.conf --ssldir=/var/lib/puppet/ssl --certname=puppetmaster.puppetlabs.lan')
+          on_box('puppetmaster', 'rm /var/lib/puppet/ssl/*/swift*;rm /var/lib/puppet/ssl/ca/signed/swift*;')
+        rescue BoxNotCreated
+        end
       end
 
       # deploys a 3 node swift cluster in parallel

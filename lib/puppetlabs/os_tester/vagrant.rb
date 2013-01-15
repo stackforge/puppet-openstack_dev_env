@@ -7,6 +7,9 @@ module Puppetlabs
 
       include Puppetlabs::OsTester::System
 
+      class BoxNotCreated < Exception
+      end
+
       # run a vagrant command
       def vagrant_command(cmd, box='')
         require 'vagrant'
