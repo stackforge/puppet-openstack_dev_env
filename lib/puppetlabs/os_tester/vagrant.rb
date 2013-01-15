@@ -10,7 +10,7 @@ module Puppetlabs
       # run a vagrant command
       def vagrant_command(cmd, box='')
         require 'vagrant'
-        env = Vagrant::Environment.new(:ui_class => Vagrant::UI::Colored)
+        env = ::Vagrant::Environment.new(:ui_class => ::Vagrant::UI::Colored)
         puts "Running #{cmd} on #{box ? box : 'all'}"
         env.cli(cmd, box)
       end
@@ -18,9 +18,9 @@ module Puppetlabs
       # run a command on an image as sudo. return the output
       def on_box (box, cmd)
         require 'vagrant'
-        env = Vagrant::Environment.new(:ui_class => Vagrant::UI::Colored)
+        env = ::Vagrant::Environment.new(:ui_class => ::Vagrant::UI::Colored)
         raise("Invalid VM: #{box}") unless vm = env.vms[box.to_sym]
-        raise("VM: #{box} was not already created") unless vm.created?
+        raise(BoxNotCreated, "VM: #{box} was not already created") unless vm.created?
         ssh_data = ''
         #vm.channel.sudo(cmd) do |type, data|
         vm.channel.sudo(cmd) do |type, data|
