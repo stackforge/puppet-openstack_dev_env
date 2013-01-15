@@ -150,6 +150,19 @@ namespace :test do
     system "bash -c 'rspec spec/test_swift_cluster.rb;echo $?' 2>&1 | tee #{log_file}"
   end
 
+  desc 'checkout a PR and test swift'
+  task 'swift_pull_request', [:repo_name, :pull_request_number] do |t, args|
+    test_pull_request(
+      args.repo_name,
+      args.pull_request_number,
+      github_login,
+      github_password,
+      'spec/test_swift_cluster.rb',
+      log_file,
+      'schedule_for_testing'
+    )
+  end
+
   desc 'checkout and test a pull request, publish the results'
   task 'pull_request', [:repo_name, :pull_request_number] do |t, args|
     test_pull_request(
