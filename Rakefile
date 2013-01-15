@@ -159,7 +159,7 @@ namespace :test do
       github_password,
       'spec/test_two_node.rb',
       log_file,
-      'test_it'
+      'schedule_for_testing'
     )
   end
 
