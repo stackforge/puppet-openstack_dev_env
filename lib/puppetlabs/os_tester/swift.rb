@@ -52,6 +52,16 @@ module Puppetlabs
         )
       end
 
+      # test that our swift cluster if functional
+      def test_swift
+        on_box('swift_proxy', 'ruby /tmp/swift_test_file.rb;exit $?')
+      end
+
+      # deploys a puppetmaster. this is required for deploying swift
+      def deploy_puppetmaster
+        vagrant_command('up', 'puppetmaster')
+      end
+
     end
   end
 end

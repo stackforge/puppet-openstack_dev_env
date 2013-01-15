@@ -140,7 +140,7 @@ namespace :test do
   end
 
   desc 'Checkout fresh master environment and test a two node deployment'
-  task 'master' do
+  task 'openstack_master' do
     refresh_modules
     system "bash -c 'rspec spec/test_two_node.rb;echo $?' 2>&1 | tee #{log_file}"
   end
@@ -175,6 +175,11 @@ namespace :test do
   desc 'test openstack with basic test script on redhat and ubuntu'
   task 'two_node' do
     test_two_node(['redhat', 'ubuntu'])
+  end
+
+  desc 'test swift cluster'
+  task 'swift_proxy' do
+    test_swift
   end
 
   desc 'test all in one deployment on redhat/ubuntu (not yet implemented)'
