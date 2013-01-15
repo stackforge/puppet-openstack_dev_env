@@ -8,6 +8,61 @@ module Puppetlabs
 
       include Puppetlabs::OsTester::Librarian
 
+      # checkout a specified pull request and test it
+      # Parameters:
+      #   repo_name::
+      #     short name of the repo to pull from (ex: nova, glance, ...)
+      #   pull_request_number::
+      #     number of pull request to pull for testing
+      #   github_login::
+      #     log in used for authentication. This user must specify the test message
+      #     in the comments of this pull request. This is also the user that will
+      #     post the test results.
+      #   github_password::
+      #     password for github user.
+      #   rspec_test::
+      #     file path for rspec file to use to test pull request.
+      #   log_file::
+      #     location of log file where test results are written.
+      #     TODO - get rid of this in favor of a real logger
+      #   test_message::
+      #     message that indicates that a pull request can be tested. It should
+      #     be written by the github user as a PR comment on the PR being tested.
+      def test_pull_request(
+        repo_name,
+        pull_request_number,
+        github_login,
+        github_password,
+        rspec_test,
+        log_file,
+        test_message = 'schedule_for_testing'
+      )
+        # reset everthing to master
+        refresh_modules
+        checkout_pr(
+          repo_name,
+          pull_request_number,
+          [github_login],
+          test_message,
+          {
+            :login    => github_login,
+            :password => github_password
+          }
+        )
+        system "bash -c 'rspec #{rspec_test}; echo $?' 2>&1 | tee #{log_file}"
+        results = File.read(log_file)
+        publish_results(
+          args.project_name,
+          args.number,
+          results.split("\n").last == '0' ? 'passed' : 'failed',
+          results,
+          {
+            :login    => github_login,
+            :password => github_password
+          }
+        )
+      end
+
       # has specified the expected body.
       def testable_pull_request?(
         pr,
