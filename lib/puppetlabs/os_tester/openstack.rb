@@ -63,9 +63,13 @@ module Puppetlabs
               if x =~ /^Author:\s+(.*)?\s+<((\S+)@(\S+))>$/
                 unless ['root', 'vagrant', 'Dan'].include?($1)
                   if contributors[$1]
-                    contributors[$1][:repos] = contributors[$1][:repos] | [module_name]
+                    if contributors[$1][:repos][module_name]
+                      contributors[$1][:repos][module_name] += 1
+                    else
+                      contributors[$1][:repos][module_name] = 1
+                    end
                   else
-                    contributors[$1] = {:email => $2, :repos => [module_name] }
+                    contributors[$1] = {:email => $2, :repos => {module_name => 1} }
                   end
                 else
                   # trimming out extra users
