@@ -108,6 +108,16 @@ namespace :git do
       puts "#{k}:#{v[:repos].inspect}"
     end
   end
+
+
+  desc 'total number of contributions for each user across all projects'
+  task :user_contributions do
+    contrib = {}
+    contributor_hash.each do |k,v|
+      contrib[k] = v[:repos].values.inject(0) {|result, x| result + x }
+    end
+    contrib.sort_by {|name, num| num }.reverse.each {|x| puts "#{x[0]}:#{x[1]}" }
+  end
 end
 
 
