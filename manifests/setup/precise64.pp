@@ -30,6 +30,8 @@ exec { '/usr/bin/apt-get update':
   logoutput   => true,
 }
 
+# run the apt get update before any packages are installed!
+Exec['/usr/bin/apt-get update'] -> Package<||>
 
 package { 'vim': ensure => present }
 
