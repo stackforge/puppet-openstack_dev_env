@@ -30,3 +30,6 @@ exec { '/usr/bin/apt-get update':
   logoutput   => true,
 }
 
+
+package { 'vim': ensure => present }
+

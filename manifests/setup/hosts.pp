@@ -40,8 +40,6 @@ package { ['hiera', 'hiera-puppet', 'ruby-debug']:
   provider => 'gem',
 }
 
-package { 'vim': ensure => present }
-
 file { '/etc/puppet/hiera.yaml':
   content =>
 '
