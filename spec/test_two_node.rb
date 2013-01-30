@@ -18,29 +18,21 @@ describe 'test various two node configurations' do
     cmd_system('vagrant destroy -f')
   end
 
-  describe 'test redhat' do
+  [
+    'redhat',
+    'ubuntu'
+  ].each do |os|
 
-    before :each do
-      update_vagrant_os('redhat')
-    end
+    describe "test #{os}" do
 
-    it 'should be able to build out a two node environment' do
-      deploy_two_node
-      result = on_box('openstack_controller', 'sudo bash /tmp/test_nova.sh;exit $?')
-      result.split("\n").last.should == 'cirros'
-    end
+      it 'should be able to build out a two node environment' do
+        update_vagrant_os(os)
+        deploy_two_node
+        # on box runs as sudo
+        result = on_box('openstack_controller', 'bash /tmp/test_nova.sh;exit $?')
+        result.split("\n").last.should == 'cirros'
+      end
 
-  end
-
-  describe 'test ubuntu' do
-    before :each do
-      update_vagrant_os('ubuntu')
-    end
-
-    it 'should be able to build out a two node environment' do
-      deploy_two_node
-      result = on_box('openstack_controller', 'sudo bash /tmp/test_nova.sh;exit $?')
-      result.split("\n").last.should == 'cirros'
     end
   end
 
