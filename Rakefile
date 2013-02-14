@@ -130,7 +130,7 @@ namespace :github do
       args.project_name,
       args.number,
       [github_login],
-      'test_it',
+      'schedule_for_testing',
       {
         :login    => github_login,
         :password => github_password
