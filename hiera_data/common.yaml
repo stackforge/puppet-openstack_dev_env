@@ -35,7 +35,6 @@ auto_assign_floating_ip: false
 openstack_controller: 172.16.0.3
 # swift settings
 swift_admin_email: dan@example_company.com
-admin_password: admin_password
 swift_user_password: swift_pass
 swift_shared_secret: changeme
 swift_local_net_ip: "%{ipaddress_eth1}"

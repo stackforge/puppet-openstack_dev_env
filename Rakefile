@@ -5,7 +5,9 @@ def base_dir
   File.expand_path(File.dirname(__FILE__))
 end
 
-require File.join(base_dir, 'lib', 'puppetlabs', 'os_tester')
+#$LOAD_PATH.push("#{base_dir}/lib")
+require 'puppetlabs/os_tester'
+#require File.join(base_dir, 'lib', 'puppetlabs', 'os_tester')
 
 include Puppetlabs::OsTester
 
@@ -25,7 +27,6 @@ def log_file
   FileUtils.touch(log_file)
   @log_file = log_file
 end
-
 
 namespace :openstack do
 
@@ -107,6 +108,16 @@ namespace :git do
       puts "#{k}:#{v[:repos].inspect}"
     end
   end
+
+
+  desc 'total number of contributions for each user across all projects'
+  task :user_contributions do
+    contrib = {}
+    contributor_hash.each do |k,v|
+      contrib[k] = v[:repos].values.inject(0) {|result, x| result + x }
+    end
+    contrib.sort_by {|name, num| num }.reverse.each {|x| puts "#{x[0]}:#{x[1]}" }
+  end
 end
 
 
@@ -119,7 +130,7 @@ namespace :github do
       args.project_name,
       args.number,
       [github_login],
-      'test_it',
+      'schedule_for_testing',
       {
         :login    => github_login,
         :password => github_password
@@ -138,41 +149,51 @@ namespace :test do
   end
 
   desc 'Checkout fresh master environment and test a two node deployment'
-  task 'master' do
+  task 'openstack_master' do
     refresh_modules
     system "bash -c 'rspec spec/test_two_node.rb;echo $?' 2>&1 | tee #{log_file}"
   end
 
-  desc 'checkout and test a pull request, publish the results'
-  task 'pull_request', [:project_name, :number] do |t, args|
+  desc 'Checkout fresh master environment and test the deployment of a swift cluster'
+  task 'swift_master' do
     refresh_modules
-    checkout_pr(
-      args.project_name,
-      args.number,
-      [github_login],
-      'test_it',
-      {
-        :login    => github_login,
-        :password => github_password
-      }
+    system "bash -c 'rspec spec/test_swift_cluster.rb;echo $?' 2>&1 | tee #{log_file}"
+  end
+
+  desc 'checkout a PR and test swift'
+  task 'swift_pull_request', [:repo_name, :pull_request_number] do |t, args|
+    test_pull_request(
+      args.repo_name,
+      args.pull_request_number,
+      github_login,
+      github_password,
+      'spec/test_swift_cluster.rb',
+      log_file,
+      'schedule_for_testing'
     )
-    system "bash -c 'rspec spec/test_two_node.rb;echo $?' 2>&1 | tee #{log_file}"
-    results = File.read(log_file)
-    publish_results(
-      args.project_name,
-      args.number,
-      results.split("\n").last == '0' ? 'passed' : 'failed',
-      results,
-      {
-        :login    => github_login,
-        :password => github_password
-      }
+  end
+
+  desc 'checkout and test a pull request, publish the results'
+  task 'pull_request', [:repo_name, :pull_request_number] do |t, args|
+    test_pull_request(
+      args.repo_name,
+      args.pull_request_number,
+      github_login,
+      github_password,
+      'spec/test_two_node.rb',
+      log_file,
+      'schedule_for_testing'
     )
   end
 
   desc 'test openstack with basic test script on redhat and ubuntu'
   task 'two_node' do
     test_two_node(['redhat', 'ubuntu'])
+  end
+
+  desc 'test swift cluster'
+  task 'swift_proxy' do
+    test_swift
   end
 
   desc 'test all in one deployment on redhat/ubuntu (not yet implemented)'

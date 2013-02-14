@@ -324,6 +324,12 @@ node puppetmaster {
 
   Exec["apt_update"] -> Package <| |>
 
+  package { ['hiera', 'hiera-puppet']:
+    ensure   => present,
+    provider => 'gem',
+    require  => Package['puppetmaster'],
+  }
+
   class { 'puppet::master':
     autosign   => true,
     modulepath => '/etc/puppet/modules-0',
