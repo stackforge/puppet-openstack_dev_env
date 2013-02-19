@@ -299,6 +299,45 @@ node /compute/ {
 
 }
 
+
+node /tempest/ {
+
+  class { 'tempest':
+    identity_host        => $::openstack_controller,
+    identity_port        => '35357',
+    identity_api_version => 'v2.0',
+    # non admin user
+    username             => 'user1',
+    password             => 'user1_password',
+    tenant_name          => 'tenant1',
+    # another non-admin user
+    alt_username         => 'user2',
+    alt_password         => 'user2_password',
+    alt_tenant_name      => 'tenant2',
+    # image information
+    image_id             => 'XXXXXXX',#<%= image_id %>,
+    image_id_alt         => 'XXXXXXX',#<%= image_id_alt %>,
+    flavor_ref           => 1,
+    flavor_ref_alt       => 2,
+    # the version of the openstack images api to use
+    image_api_version    => '1',
+    image_host           => $::openstack_controller,
+    image_port           => '9292',
+
+    # this should be the username of a user with administrative privileges
+    admin_username       => 'admin',
+    admin_password       => $::admin_password,
+    admin_tenant_name    => 'admin',
+  }
+
+  class { 'openstack::auth_file':
+    admin_password       => $::admin_password,
+    keystone_admin_token => $::admin_token,
+    controller_node      => $::openstack_controller,
+  }
+
+}
+
 node /devstack/ {
 
   class { 'devstack': }
