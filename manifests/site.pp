@@ -58,6 +58,7 @@ $auto_assign_floating_ip = hiera('auto_assign_floating_ip', false)
 #### controller/compute mode settings ####
 $openstack_controller = hiera('openstack_controller', '172.16.0.3')
 #### controller/compute mode settings ####
+$openstack_version    = hiera('openstack_version', 'folsom')
 
 # node declaration for all in one
 import 'scenarios/all_in_one.pp'
@@ -333,6 +334,7 @@ node /tempest/ {
     admin_username       => 'admin',
     admin_password       => $::admin_password,
     admin_tenant_name    => 'admin',
+    version_to_test      => $::openstack_version,
   }
 
   class { 'openstack::auth_file':
