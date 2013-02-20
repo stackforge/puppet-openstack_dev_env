@@ -1,5 +1,4 @@
 source "https://rubygems.org"
-gem "librarian"
+gem "vagrant", "~>1.0"
 gem "librarian-puppet"
 gem "github_api"
-gem "vagrant"
