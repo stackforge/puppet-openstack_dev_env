@@ -303,11 +303,6 @@ node /compute/ {
 
 node /tempest/ {
 
-  package { 'python-pip':
-    ensure => present,
-    before => Class['tempest'],
-  }
-
   class { 'tempest':
     identity_host        => $::openstack_controller,
     identity_port        => '35357',
