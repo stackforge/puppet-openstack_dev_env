@@ -303,6 +303,10 @@ node /compute/ {
 
 node /tempest/ {
 
+  # this assumes that tempest is being run on the same node
+  # as the openstack controller
+  nova_config { 'api_rate_limit': value => 'false' }
+
   class { 'tempest':
     identity_host        => $::openstack_controller,
     identity_port        => '35357',
