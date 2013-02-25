@@ -306,6 +306,11 @@ node /tempest/ {
   if $::openstack_version == 'folsom' {
     # this assumes that tempest is being run on the same node
     # as the openstack controller
+
+    service { 'nova-api': }
+    Nova_config<||> ~> Service['nova-api']
+    Nova_paste_api_ini<||> ~> Service['nova-api']
+
     nova_config { 'api_rate_limit': value => 'false' }
 
     # remove rate limiting
