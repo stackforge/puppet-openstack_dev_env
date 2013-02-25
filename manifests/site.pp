@@ -303,7 +303,7 @@ node /compute/ {
 
 node /tempest/ {
 
-  if $version_to_test == 'folsom' {
+  if $::openstack_version == 'folsom' {
     # this assumes that tempest is being run on the same node
     # as the openstack controller
     nova_config { 'api_rate_limit': value => 'false' }
