@@ -303,9 +303,20 @@ node /compute/ {
 
 node /tempest/ {
 
-  # this assumes that tempest is being run on the same node
-  # as the openstack controller
-  nova_config { 'api_rate_limit': value => 'false' }
+  if $version_to_test == 'folsom' {
+    # this assumes that tempest is being run on the same node
+    # as the openstack controller
+    nova_config { 'api_rate_limit': value => 'false' }
+
+    # remove rate limiting
+    # this may be folsom specific
+    nova_paste_api_ini {
+      'composite:openstack_compute_api_v2/noauth':   value => 'faultwrap sizelimit noauth osapi_compute_app_v2';
+      'composite:openstack_compute_api_v2/keystone': value => 'faultwrap sizelimit authtoken keystonecontext osapi_compute_app_v2';
+      'composite:openstack_volume_api_v1/noauth':    value => 'faultwrap sizelimit noauth osapi_volume_app_v1';
+      'composite:openstack_volume_api_v1/keystone':  value => 'faultwrap sizelimit authtoken keystonecontext osapi_volume_app_v1';
+    }
+  }
 
   class { 'tempest':
     identity_host        => $::openstack_controller,
