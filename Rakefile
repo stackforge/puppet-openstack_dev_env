@@ -15,6 +15,10 @@ def github_password
   YAML.load_file(File.join(base_dir, '.github_auth'))['password']
 end
 
+def github_admins
+  YAML.load_file(File.join(base_dir, '.github_auth'))['admins'].to_a
+end
+
 def github_login
   YAML.load_file(File.join(base_dir, '.github_auth'))['login']
 end
@@ -129,7 +133,7 @@ namespace :github do
     checkout_pr(
       args.project_name,
       args.number,
-      [github_login],
+      [github_login] + github_admins
       'schedule_for_testing',
       {
         :login    => github_login,
