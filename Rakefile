@@ -133,7 +133,7 @@ namespace :github do
     checkout_pr(
       args.project_name,
       args.number,
-      [github_login] + github_admins
+      [github_login] + github_admins,
       'schedule_for_testing',
       {
         :login    => github_login,
