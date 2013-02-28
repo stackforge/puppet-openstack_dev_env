@@ -209,6 +209,41 @@ module Puppetlabs
           'body' => "Test #{outcome}. Results can be found here: #{gist_response.html_url}"
         )
       end
+
+      def testable_pull_requests(
+        project_names,
+        admin_users,
+        github_login,
+        github_password,
+        test_message = 'schedule_for_testing'
+      )
+        testable_pull_requests = {}
+        each_repo do |repo_name|
+          if project_names.include?(repo_name)
+            options = { :login => github_login, :password => github_password }
+            prs = ::Github.new(options).pull_requests.list('puppetlabs', "puppetlabs-#{repo_name}")
+            prs.each do |pr|
+              # the data structure of pr returned from list (above) appears to be in a different format
+              # than this get call, therefor, I need to get the number, and make this extra call.
+              # this seems to justify my experience so far that this github_api plugin may not be worth using.
+              number = pr['number']
+              pr = ::Github.new(options).pull_requests.get('puppetlabs', "puppetlabs-#{repo_name}", number)
+              # I know this is lazy to do b/c it means every pull request will be validated twice based
+              # on the current workflow with jenkins (where this will populate parameterized builds
+              # that also check if the pull request is valid
+              if testable_pull_request?(pr, admin_users + github_login.to_a, test_message, options)
+                if testable_pull_requests[repo_name]
+                  testable_pull_requests[repo_name].push(number)
+                else
+                  testable_pull_requests[repo_name] = [number]
+                end
+              end
+            end
+          end
+        end
+        puts testable_pull_requests.inspect
+      end
+
     end # end Github
 
   end

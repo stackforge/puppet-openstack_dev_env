@@ -34,6 +34,17 @@ end
 
 namespace :openstack do
 
+  desc 'get testable pull requests'
+  task :testable_pull_requests do
+    testable_pull_requests(
+      ['cinder', 'nova', 'glance', 'openstack', 'keystone', 'horizon'],
+      github_admins,
+      github_login,
+      github_password,
+      'ready_for_testing'
+    )
+  end
+
   desc 'clone all required modules'
   task :setup do
     cmd_system('librarian-puppet install')
@@ -169,6 +180,7 @@ namespace :test do
     test_pull_request(
       args.repo_name,
       args.pull_request_number,
+      github_admins,
       github_login,
       github_password,
       'spec/test_swift_cluster.rb',
@@ -182,6 +194,7 @@ namespace :test do
     test_pull_request(
       args.repo_name,
       args.pull_request_number,
+      github_admins,
       github_login,
       github_password,
       'spec/test_two_node.rb',
