@@ -349,6 +349,7 @@ node /tempest/ {
     admin_username       => 'admin',
     admin_password       => $::admin_password,
     admin_tenant_name    => 'admin',
+    nova_db_uri          => 'mysql://nova:nova_db_password@127.0.0.1/nova',
     version_to_test      => $::openstack_version,
   }
 
