@@ -307,7 +307,15 @@ node /tempest/ {
     # this assumes that tempest is being run on the same node
     # as the openstack controller
 
-    service { 'nova-api': }
+    if $osfamily == 'redhat' {
+      $nova_api_service_name = 'openstack-nova-api'
+    } else {
+      $nova_api_service_name = 'nova-api'
+    }
+
+    service { 'nova-api':
+      name => $nova_api_service_name
+    }
     Nova_config<||> ~> Service['nova-api']
     Nova_paste_api_ini<||> ~> Service['nova-api']
 
