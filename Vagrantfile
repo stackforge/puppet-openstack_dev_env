@@ -19,19 +19,6 @@ Vagrant::Config.run do |config|
 
   v_config = parse_vagrant_config
 
-  if v_config['operatingsystem'] and v_config['operatingsystem'] != ''
-    if v_config['operatingsystem'].downcase == 'redhat'
-      os_name = 'centos'
-      config.vm.box     = 'centos'
-      config.vm.box_url = 'https://dl.dropbox.com/u/7225008/Vagrant/CentOS-6.3-x86_64-minimal.box'
-    elsif v_config['operatingsystem'].downcase == 'ubuntu'
-      os_name = 'precise64'
-      config.vm.box     = 'precise64'
-      config.vm.box_url = 'http://files.vagrantup.com/precise64.box'
-    else
-      raise(Exception, "undefined operatingsystem: #{v_config['operatingsystem']}")
-    end
-  end
 
   ssh_forward_port = 2244
 
@@ -129,20 +116,41 @@ Vagrant::Config.run do |config|
      }
    },
    { 'puppetmaster'    => {
-       'memory'  => 512,
-       'ip1'     => '172.16.0.31'
+       'memory'          => 512,
+       'ip1'             => '172.16.0.31',
+       # I dont care for the moment if this suppors redhat
+       # eventually it should, but I care a lot more about testing
+       # openstack on RHEL than the puppetmaster
+       'operatingsystem' => 'ubuntu'
      }
    },
    { 'openstack_all' => { 'memory' => 2512, 'ip1' => '172.16.0.11'} }
   ].each do |hash|
 
-
     name  = hash.keys.first
     props = hash.values.first
-
     raise "Malformed vhost hash" if hash.size > 1
 
     config.vm.define name.intern do |agent|
+
+      # let nodes override their OS
+      operatingsystem = (props['operatingsystem'] || v_config['operatingsystem']).downcase
+
+      # default to config file, but let hosts override it
+      if operatingsystem and operatingsystem != ''
+        if operatingsystem == 'redhat'
+          os_name = 'centos'
+          agent.vm.box     = 'centos'
+          agent.vm.box_url = 'https://dl.dropbox.com/u/7225008/Vagrant/CentOS-6.3-x86_64-minimal.box'
+        elsif operatingsystem == 'ubuntu'
+          os_name = 'precise64'
+          agent.vm.box     = 'precise64'
+          agent.vm.box_url = 'http://files.vagrantup.com/precise64.box'
+        else
+          raise(Exception, "undefined operatingsystem: #{operatingsystem}")
+        end
+      end
+
       number = props['ip1'].gsub(/\d+\.\d+\.\d+\.(\d+)/, '\1').to_i
       agent.vm.forward_port(22, ssh_forward_port + number)
       # host only network
