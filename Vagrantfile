@@ -44,7 +44,7 @@ Vagrant::Config.run do |config|
    # intended to be used for tempest tests
    {'compute2' =>
      {
-       'memory' => 8000,
+       'memory' => 12000,
        'ip1'    => '172.16.0.14'
      }
    },
