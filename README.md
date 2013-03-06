@@ -33,7 +33,8 @@ virtualbox should be installed
     
 3a. Install github_api.
 
-    > gem install github_api
+    # WARNING - other versions are known to have bugs
+    > gem install github_api -v 0.8.1
 
 4. it is strongly recommended that you set up a proxy (like squid!) to speed up perforance
 of package installation.
