@@ -48,6 +48,7 @@ file { '/etc/puppet/hiera.yaml':
   - yaml
 :hierarchy:
   - "%{hostname}"
+  - jenkins
   - common
 :yaml:
    :datadir: /etc/puppet/hiera_data'
