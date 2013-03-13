@@ -8,3 +8,4 @@ Puppetfile.lock
 my.log
 *swp
 logs
+hiera_data/jenkins.yaml

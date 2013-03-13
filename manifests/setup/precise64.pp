@@ -1,12 +1,14 @@
-import 'hosts.pp'
+#import 'hosts.pp'
 
 #
 # This puppet manifest is already applied first to do some environment specific things
 #
 
+$openstack_version  = hiera('openstack_version', 'folsom')
+
 apt::source { 'openstack_folsom':
   location          => "http://ubuntu-cloud.archive.canonical.com/ubuntu",
-  release           => "precise-updates/folsom",
+  release           => "precise-updates/${openstack_version}",
   repos             => "main",
   required_packages => 'ubuntu-cloud-keyring',
 }

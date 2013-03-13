@@ -1,5 +1,10 @@
 #
-# specify a connection to the hardcoded puppet master
+# this manifest performs essentially environment configuration
+# that needs to be run before anything is configured
+#
+
+#
+# setup basic dns in /etc/hosts
 #
 host {
   'puppetmaster':        ip => '172.16.0.31', host_aliases => ['puppetmaster.puppetlabs.lan'];
@@ -33,8 +38,7 @@ package { ['make', 'gcc']:
   ensure => present,
 } ->
 
-# install hiera
-# TODO pretty sure hiera-puppet is not installed b/c I installed the module
+# install hiera, to support Puppet pre 3.0
 package { ['hiera', 'hiera-puppet', 'ruby-debug']:
   ensure   => present,
   provider => 'gem',

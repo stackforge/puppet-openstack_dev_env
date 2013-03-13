@@ -185,20 +185,20 @@ Vagrant::Config.run do |config|
       puppet_options = ["--certname=#{node_name}"]
       puppet_options.merge!({'--verbose', '--show_diff'}) if v_config['verbose']
 
+      # configure hosts, install hiera
+      # perform pre-steps that always need to occur
+      agent.vm.provision(:puppet, :pp_path => "/etc/puppet") do |puppet|
+        puppet.manifests_path = 'manifests'
+        puppet.manifest_file  = "setup/hosts.pp"
+        puppet.module_path    = 'modules'
+        puppet.options        = puppet_options
+      end
+
       if v_config['update_repos'] == true
 
         agent.vm.provision(:puppet, :pp_path => "/etc/puppet") do |puppet|
           puppet.manifests_path = 'manifests'
           puppet.manifest_file  = "setup/#{os_name}.pp"
-          puppet.module_path    = 'modules'
-          puppet.options        = puppet_options
-        end
-
-      else
-
-        agent.vm.provision(:puppet, :pp_path => "/etc/puppet") do |puppet|
-          puppet.manifests_path = 'manifests'
-          puppet.manifest_file  = "setup/hosts.pp"
           puppet.module_path    = 'modules'
           puppet.options        = puppet_options
         end
