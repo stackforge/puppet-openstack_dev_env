@@ -129,6 +129,14 @@ node /openstack-controller/ {
     }
   }
 
+  # we need to install conductor only for grizzly
+  # because this version of the manifests needs to support both
+  if $openstack_version == 'grizzly' {
+    class { 'nova::conductor':
+      enabled => true,
+    }
+  }
+
   class { 'openstack::controller':
     #floating_range          => $floating_network_range,
   # Required Network
