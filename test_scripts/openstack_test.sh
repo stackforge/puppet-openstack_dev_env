@@ -16,6 +16,7 @@
 # bash test_scripts/openstack_test.sh
 # TODO figure out if I should add pull request support
 set -e
+set -u
 
 # set testing variables
 echo "operatingsystem: ${operatingsystem}" > config.yaml
