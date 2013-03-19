@@ -76,19 +76,13 @@ node /openstack-controller/ {
     sleep_time => 60,
   }
 
-  if $::osfamily == 'Debian' {
-    include 'apache'
-  } else {
+  if $::osfamily == 'Redhat' {
     # redhat specific dashboard stuff
     file_line { 'nova_sudoers':
       line   => 'nova ALL = (root) NOPASSWD: /usr/bin/nova-rootwrap /etc/nova/rootwrap.conf *',
       path   => '/etc/sudoers',
       before => Package['nova-common'],
     }
-
-    class {'apache':}
-    class {'apache::mod::wsgi':}
-    file { '/etc/httpd/conf.d/openstack-dashboard.conf':}
 
     nova_config { 'rpc_backend': value => 'nova.openstack.common.rpc.impl_kombu';}
     cinder_config { 'DEFAULT/rpc_backend': value => 'cinder.openstack.common.rpc.impl_kombu';}
