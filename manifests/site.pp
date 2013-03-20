@@ -218,16 +218,6 @@ node /compute/ {
       } ~> Service['libvirt']
     } elsif $::osfamily == 'RedHat' {
 
-      package { 'avahi': ensure => present } ~>
-      service { 'messagebus':
-        ensure => running,
-        enable => true,
-      } ~>
-      service { 'avahi-daemon':
-        ensure => running,
-        enable => true,
-      } ~>
-      Service['libvirtd']
       cinder_config { 'DEFAULT/rpc_backend': value => 'cinder.openstack.common.rpc.impl_kombu';}
 
       file_line { 'nova_sudoers':
