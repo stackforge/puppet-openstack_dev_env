@@ -37,6 +37,7 @@ elif [ $module_install_method = 'pmt' ]; then
   puppet module install --modulepath=`pwd`/modules  puppetlabs-openstack
   git clone https://github.com/ripienaar/hiera-puppet modules/hiera_puppet
   git clone git://github.com/puppetlabs/puppetlabs-swift modules/swift
+  git clone git://github.com/puppetlabs/puppetlabs-tempest modules/tempest
 fi
 # install a controller and compute instance
 
