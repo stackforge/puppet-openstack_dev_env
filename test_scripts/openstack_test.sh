@@ -3,10 +3,10 @@
 # script to build a two node openstack environment and test.
 # this script is intended to be run as a jenkins parameterized build with
 # the following build parameters:
-#   $BUILD_ID - jenkins variables that determines the directory where the test is run
 #   $operatingsystem - OS to test OS install on (accepts Redhat/Ubuntu)
 #   $openstack_version - openstack version to test (accepts folsom/grizzly)
 #   $test_mode type of test to run (accepts: tempest_full, tempest_smoke, puppet_openstack)
+#   $module_install_method - how to install modules (accepts librarian or pmt)
 #
 # # I am running it as follows:
 # mkdir $BUILD_ID
@@ -31,7 +31,13 @@ export GEM_HOME=`pwd`/.vendor
 # install gem dependencies
 bundle install
 # install required modules
-bundle exec librarian-puppet install
+if [ $module_install_method = 'librarian' ]; then
+  bundle exec librarian-puppet install
+elif [ $module_install_method = 'pmt' ]; then
+  puppet module install --modulepath=`pwd`/modules  puppetlabs-openstack
+  git clone https://github.com/ripienaar/hiera-puppet modules/hiera_puppet
+  git clone git://github.com/puppetlabs/puppetlabs-swift modules/swift
+fi
 # install a controller and compute instance
 
 # check that the VM is not currently running
