@@ -157,6 +157,19 @@ end
 
 namespace :test do
 
+  desc 'run openstack puppet module unit tests'
+  task :unit do
+    status = command = "export MODULEPATH=#{base_dir}/modules;export GEM_HOME=#{base_dir}/.vendor;"
+    ['cinder', 'nova', 'glance', 'openstack', 'keystone', 'horizon', 'swift'].collect do |proj|
+      Dir.chdir("modules/#{proj}") do
+      local_command = command + "bundle exec rake spec_standalone"
+      puts local_command
+      system(local_command)
+      end
+    end.uniq
+    status == ['true'] ? exit(0) : exit(1)
+  end
+
   desc 'reset test environment'
   task :reset do
     refresh_modules

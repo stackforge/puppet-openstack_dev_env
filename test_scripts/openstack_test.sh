@@ -28,7 +28,13 @@ elif [ $module_install_method = 'pmt' ]; then
   git clone git://github.com/puppetlabs/puppetlabs-tempest modules/tempest
   git clone git://github.com/puppetlabs/puppetlabs-vcsrepo modules/vcsrepo
 fi
-# install a controller and compute instance
+
+# install gem dependencies
+mkdir .vendor
+export GEM_HOME=`pwd`/.vendor
+# install gem dependencies
+bundle install
+
 
 # only build out integration test environment if we are not running unit tests
 if [ ! $test_mode = 'unit' ]; then
@@ -40,12 +46,7 @@ if [ ! $test_mode = 'unit' ]; then
     echo 'openstack_version: folsom' > hiera_data/jenkins.yaml
   fi
 
-  # install gem dependencies
-  mkdir .vendor
-  export GEM_HOME=`pwd`/.vendor
-  # install gem dependencies
-  bundle install
-
+# install a controller and compute instance
   # check that the VM is not currently running
   # if it is, stop that VM
   if VBoxManage list vms | grep openstack_controller.puppetlabs.lan; then
@@ -75,7 +76,7 @@ elif [ $test_mode = 'tempest_smoke' ]; then
 elif [ $test_mode = 'tempest_full' ]; then
   bundle exec vagrant ssh -c 'cd /var/lib/tempest/;sudo ./jenkins_launch_script.sh;' openstack_controller
 elif [ $test_mode = 'unit' ]; then
-  echo 'we do not yet support running unit tests'
+  bundle exec rake test:unit
 else
   echo "Unsupported testnode ${test_mode}, this test matrix only support tempest_smoke and puppet_openstack tests"
 fi
