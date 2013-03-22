@@ -18,6 +18,12 @@
 set -e
 set -u
 
+# install gem dependencies
+mkdir .vendor
+export GEM_HOME=`pwd`/.vendor
+# install gem dependencies
+bundle install
+
 # install required modules
 if [ $module_install_method = 'librarian' ]; then
   bundle exec librarian-puppet install
@@ -28,13 +34,6 @@ elif [ $module_install_method = 'pmt' ]; then
   git clone git://github.com/puppetlabs/puppetlabs-tempest modules/tempest
   git clone git://github.com/puppetlabs/puppetlabs-vcsrepo modules/vcsrepo
 fi
-
-# install gem dependencies
-mkdir .vendor
-export GEM_HOME=`pwd`/.vendor
-# install gem dependencies
-bundle install
-
 
 # only build out integration test environment if we are not running unit tests
 if [ ! $test_mode = 'unit' ]; then
