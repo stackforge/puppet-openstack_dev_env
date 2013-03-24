@@ -31,7 +31,5 @@ mod 'cprice404/inifile', :git => 'git://github.com/cprice-puppet/puppetlabs-inif
 # puppet related modules
 mod 'ripienaar/hiera_puppet', :git => 'https://github.com/ripienaar/hiera-puppet'
 mod 'puppetlabs/ruby'
-#mod 'puppet/puppet',         :git => 'git://github.com/stephenrjohnson/puppetlabs-puppet.git'
-#mod 'puppetlabs/puppetdb',       :git => 'git://github.com/bodepd/puppetlabs-puppetdb.git'
-mod 'puppetlabs/postgresql', :git => 'git://github.com/bodepd/puppet-postgresql.git'
-#mod 'ripienaar/ruby-puppetdb', :git => 'git://github.com/ripienaar/ruby-puppetdb'
+mod 'stephenrjohnson/puppet',  "0.0.6"
+mod 'ripienaar/ruby-puppetdb', :git => 'git://github.com/ripienaar/ruby-puppetdb'
