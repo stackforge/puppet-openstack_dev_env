@@ -323,6 +323,12 @@ node /tempest/ {
     }
   }
 
+  if ($::openstack_version == 'grizzly') {
+    $revision = 'master'
+  } else {
+    $revision = $::openstack_version
+  }
+
   class { 'tempest':
     identity_host        => $::openstack_controller,
     identity_port        => '35357',
@@ -350,7 +356,7 @@ node /tempest/ {
     admin_password       => $::admin_password,
     admin_tenant_name    => 'admin',
     nova_db_uri          => 'mysql://nova:nova_db_password@127.0.0.1/nova',
-    version_to_test      => $::openstack_version,
+    version_to_test      => $revision,
   }
 
   class { 'openstack::auth_file':
