@@ -183,7 +183,7 @@ Vagrant::Config.run do |config|
       end
 
       puppet_options = ["--certname=#{node_name}"]
-      puppet_options.merge!({'--verbose', '--show_diff'}) if v_config['verbose']
+      puppet_options.merge!(['--verbose', '--show_diff']) if v_config['verbose']
 
       # configure hosts, install hiera
       # perform pre-steps that always need to occur
