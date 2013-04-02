@@ -71,9 +71,9 @@ elif [ $test_mode = 'tempest_smoke' ]; then
   # run the tempest smoke tests
   bundle exec vagrant ssh -c 'sudo puppet apply --certname tempest --modulepath=/etc/puppet/modules-0/ /etc/puppet/manifests/site.pp --trace --debug' openstack_controller
   # run tempest tests
-  bundle exec vagrant ssh -c 'cd /var/lib/tempest/;sudo ./jenkins_launch_script.sh --smoke;' openstack_controller
+  bundle exec vagrant ssh -c 'cd /var/lib/tempest/;sudo ./jenkins_launch_script.sh --smoke;exit $?;' openstack_controller
 elif [ $test_mode = 'tempest_full' ]; then
-  bundle exec vagrant ssh -c 'cd /var/lib/tempest/;sudo ./jenkins_launch_script.sh;' openstack_controller
+  bundle exec vagrant ssh -c 'cd /var/lib/tempest/;sudo ./jenkins_launch_script.sh;exit $?;' openstack_controller
 elif [ $test_mode = 'unit' ]; then
   bundle exec rake test:unit
 else
