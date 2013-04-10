@@ -1,14 +1,14 @@
 forge "http://forge.puppetlabs.com"
 
-mod 'puppetlabs/openstack', :git => 'git://github.com/puppetlabs/puppetlabs-openstack'
-mod 'puppetlabs/nova', :git => 'git://github.com/puppetlabs/puppetlabs-nova'
-mod 'puppetlabs/glance', :git => 'git://github.com/puppetlabs/puppetlabs-glance'
-mod 'puppetlabs/keystone', :git => 'git://github.com/puppetlabs/puppetlabs-keystone'
-mod 'puppetlabs/horizon', :git => 'git://github.com/puppetlabs/puppetlabs-horizon'
-mod 'puppetlabs/swift', :git => 'git://github.com/puppetlabs/puppetlabs-swift'
-mod 'puppetlabs/cinder', :git => 'git://github.com/puppetlabs/puppetlabs-cinder'
+mod 'puppetlabs/openstack', :git => 'git://github.com/stackforge/puppet-openstack'
+mod 'puppetlabs/nova', :git => 'git://github.com/stackforge/puppet-nova'
+mod 'puppetlabs/glance', :git => 'git://github.com/stackforge/puppet-glance'
+mod 'puppetlabs/keystone', :git => 'git://github.com/stackforge/puppet-keystone'
+mod 'puppetlabs/horizon', :git => 'git://github.com/stackforge/puppet-horizon'
+mod 'puppetlabs/swift', :git => 'git://github.com/stackforge/puppet-swift'
+mod 'puppetlabs/cinder', :git => 'git://github.com/stackforge/puppet-cinder'
 mod 'puppetlabs/tempest', :git => 'git://github.com/puppetlabs/puppetlabs-tempest'
-mod 'puppet/quantum', :git => 'git://github.com/bodepd/openstack-quantum-puppet/'
+mod 'puppet/quantum', :git => 'git://github.com/bodepd/puppet-quantum/'
 # openstack middleware
 mod 'puppet/vswitch', :git => 'git://github.com/ekarlso/puppet-vswitch'
 mod 'puppetlabs/rabbitmq', :git => 'git://github.com/puppetlabs/puppetlabs-rabbitmq'
