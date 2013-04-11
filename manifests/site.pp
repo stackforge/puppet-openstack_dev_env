@@ -40,11 +40,13 @@ $secret_key        = hiera('secret_key', 'secret_key')
 
 $libvirt_type      = hiera('libvirt_type', 'qemu')
 #$network_type      = hiera('', 'quantum')
-$network_type      = hiera('', 'nova')
+$network_type      = hiera('network_type', 'nova')
 if $network_type == 'nova' {
-  $use_quantum = false
-  $multi_host  = true
+  $use_quantum  = false
+  $multi_host   = true
+  $nova_network = true
 } else {
+  $nova_network = false
   $use_quantum = true
 }
 
@@ -72,8 +74,9 @@ node /openstack-controller/ {
 
   # deploy a script that can be used to test nova
   class { 'openstack::test_file':
-    quantum    => $use_quantum,
-    sleep_time => 120,
+    quantum     => $use_quantum,
+    sleep_time  => 120,
+    floating_ip => $nova_network,
   }
 
   if $::osfamily == 'Redhat' {
@@ -274,7 +277,6 @@ node /compute/ {
     libvirt_type           => $libvirt_type,
     sql_connection         => "mysql://nova:${nova_db_password}@${openstack_controller}/nova",
     cinder_sql_connection  => "mysql://cinder:${cinder_db_password}@${openstack_controller}/cinder",
-    quantum_sql_connection => "mysql://quantum:${quantum_db_password}@${openstack_controller}/quantum?charset=utf8",
     multi_host             => $multi_host,
     fixed_range            => $fixed_network_range,
     nova_user_password     => $nova_user_password,
