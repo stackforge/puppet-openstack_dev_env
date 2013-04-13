@@ -87,7 +87,7 @@ node /openstack-controller/ {
       before => Package['nova-common'],
     }
 
-    nova_config { 'rpc_backend': value => 'nova.openstack.common.rpc.impl_kombu';}
+    nova_config { 'DEFAULT/rpc_backend': value => 'nova.openstack.common.rpc.impl_kombu';}
     cinder_config { 'DEFAULT/rpc_backend': value => 'cinder.openstack.common.rpc.impl_kombu';}
     #selboolean{'httpd_can_network_connect':
     #  value => on,
@@ -242,11 +242,11 @@ node /compute/ {
         before  => Service['cinder-volume'],
       }
 
-      nova_config { 'rpc_backend': value => 'nova.openstack.common.rpc.impl_kombu';}
+      nova_config { 'DEFAULT/rpc_backend': value => 'nova.openstack.common.rpc.impl_kombu';}
 
       nova_config{
-        "network_host": value => $openstack_controller;
-        "libvirt_inject_partition": value => "-1";
+        "DEFAULT/network_host": value => $openstack_controller;
+        "DEFAULT/libvirt_inject_partition": value => "-1";
       }
       if $libvirt_type == "qemu" {
         file { "/usr/bin/qemu-system-x86_64":
@@ -313,7 +313,7 @@ node /tempest/ {
     Nova_config<||> ~> Service['nova-api']
     Nova_paste_api_ini<||> ~> Service['nova-api']
 
-    nova_config { 'api_rate_limit': value => 'false' }
+    nova_config { 'DEFAULT/api_rate_limit': value => 'false' }
 
     # remove rate limiting
     # this may be folsom specific
