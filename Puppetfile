@@ -10,7 +10,7 @@ mod 'puppetlabs/cinder', :git => 'git://github.com/stackforge/puppet-cinder'
 mod 'puppetlabs/tempest', :git => 'git://github.com/puppetlabs/puppetlabs-tempest'
 mod 'puppet/quantum', :git => 'git://github.com/bodepd/puppet-quantum/'
 # openstack middleware
-mod 'puppet/vswitch', :git => 'git://github.com/ekarlso/puppet-vswitch'
+mod 'puppet/vswitch', :git => 'git://github.com/bodepd/puppet-vswitch'
 mod 'puppetlabs/rabbitmq', :git => 'git://github.com/puppetlabs/puppetlabs-rabbitmq'
 mod 'puppetlabs/mysql', :git => 'git://github.com/puppetlabs/puppetlabs-mysql'
 mod 'puppetlabs/git', :git => 'git://github.com/puppetlabs/puppetlabs-git'
