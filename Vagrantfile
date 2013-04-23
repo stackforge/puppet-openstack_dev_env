@@ -3,7 +3,7 @@ def parse_vagrant_config(
 )
   require 'yaml'
   config = {
-    'gui_mode'        => "false",
+    'gui_mode'        => false,
     'operatingsystem' => 'ubuntu',
     'verbose'         => false,
     'update_repos'    => true
@@ -166,7 +166,7 @@ Vagrant::Config.run do |config|
       #agent.vm.customize ["modifyvm", :id, "--macaddress3", 'auto']
 
       agent.vm.customize ["modifyvm", :id, "--memory", props['memory'] || 2048 ]
-      agent.vm.boot_mode = 'gui' if v_config['gui_mode'] == 'true'
+      agent.vm.boot_mode = 'gui' if v_config['gui_mode']
       agent.vm.customize ["modifyvm", :id, "--name", "#{name}.puppetlabs.lan"]
       agent.vm.host_name = "#{name.gsub('_', '-')}.puppetlabs.lan"
 
