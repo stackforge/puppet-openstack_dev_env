@@ -157,13 +157,6 @@ Vagrant::Config.run do |config|
       agent.vm.network :hostonly, props['ip1'], :adapter => 2
       agent.vm.network :hostonly, props['ip1'].gsub(/(\d+\.\d+)\.\d+\.(\d+)/) {|x| "#{$1}.1.#{$2}" }, :adapter => 3
       agent.vm.network :hostonly, props['ip1'].gsub(/(\d+\.\d+)\.\d+\.(\d+)/) {|x| "#{$1}.2.#{$2}" }, :adapter => 4
-      #agent.vm.customize ["modifyvm", :id, "--nicpromisc1", "allow-all"]
-      # natted network
-      #agent.vm.customize ["modifyvm", :id, "--nic3", "hostonly"]
-      #agent.vm.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
-
-      #agent.vm.customize ["modifyvm", :id, "--macaddress2", 'auto']
-      #agent.vm.customize ["modifyvm", :id, "--macaddress3", 'auto']
 
       agent.vm.customize ["modifyvm", :id, "--memory", props['memory'] || 2048 ]
       agent.vm.boot_mode = 'gui' if v_config['gui_mode']
