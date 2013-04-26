@@ -6,11 +6,11 @@ folsom implementation of the openstack puppet modules.
 
 # prereqs
 
-1. Ensure that you have rake as well as rubygems installed
+1. Ensure that you have rake and rubygems installed
 
-2. install vagranat and dependencies:
+2. install vagrant and dependencies:
 
-vagrant should be installed
+vagrant should be installed (the latest version of vagrant is generally available as a package)
 
     > gem install vagrant
 
@@ -20,13 +20,9 @@ virtualbox should be installed
 
     > gem install librarian-puppet
 
-3a. Install github_api.
-
-    # WARNING - other versions are known to have bugs
-    > gem install github_api -v 0.8.1
-
-4. it is strongly recommended that you set up a proxy (like squid!) to speed up perforance
-of package installation.
+3. it is strongly recommended that you set up a proxy (like squid!) to speed up perforance
+of package installation. If you do not use a proxy, you need to change some settings in
+your site manifest.
 
 # project contents
 
