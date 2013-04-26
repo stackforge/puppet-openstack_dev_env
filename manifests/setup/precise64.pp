@@ -6,7 +6,7 @@
 
 $openstack_version  = hiera('openstack_version', 'folsom')
 
-apt::source { 'openstack_folsom':
+apt::source { 'openstack_cloud_archive':
   location          => "http://ubuntu-cloud.archive.canonical.com/ubuntu",
   release           => "precise-updates/${openstack_version}",
   repos             => "main",
