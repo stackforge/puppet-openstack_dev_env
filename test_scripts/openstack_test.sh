@@ -40,11 +40,15 @@ elif [ $module_install_method = 'pmt' ]; then
 fi
 
 if [ -n "${module_repo:-}" ]; then
-  pushd $module_repo
+  if [ ! "${module_repo:-}" = 'openstack_dev_env' ]; then
+    pushd $module_repo
+  fi
   if [ -n "${checkout_branch_command:-}" ]; then
     eval $checkout_branch_command
   fi
-  popd
+  if [ ! "${module_repo:-}" = 'openstack_dev_env' ]; then
+    popd
+  fi
 fi
 
 

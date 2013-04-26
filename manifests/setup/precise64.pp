@@ -28,7 +28,7 @@ class { 'apt':
 exec { '/usr/bin/apt-get update':
   require     => Class['apt'],
   refreshonly => true,
-  subscribe   => [Class['apt'], Apt::Source["openstack_folsom"]],
+  subscribe   => [Class['apt'], Apt::Source["openstack_cloud_archive"]],
   logoutput   => true,
 }
 
