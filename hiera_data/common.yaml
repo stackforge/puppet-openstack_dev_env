@@ -8,7 +8,7 @@ cinder_db_password: cinder_db_password
 quantum_db_password: quantum_db_password
 # mysql allowed hosts
 allowed_hosts:
-  - %
+  - '%'
 # keystone settings
 admin_token: service_token
 admin_email: keystone@localhost
@@ -33,6 +33,7 @@ floating_network_range: 172.16.0.128/25
 auto_assign_floating_ip: false
 # openstack controller ip address
 openstack_controller: 172.16.0.3
+openstack_version: grizzly
 # swift settings
 swift_admin_email: dan@example_company.com
 swift_user_password: swift_pass

@@ -38,14 +38,28 @@ package { ['make', 'gcc']:
   ensure => present,
 }
 
-if $::puppetversion !~ /(?i:enterprise)/ {
+$puppet2 = str2bool(inline_template('<%= scope.lookupvar("::puppetversion") < "3.0" %>'))
+if ($puppet2) and ($::puppetversion !~ /(?i:enterprise)/) {
   # install hiera, to support Puppet pre 3.0
-  # note that we don't need to do this on PE
-  # as hiera is installed with PE by default
-  package { ['hiera', 'hiera-puppet', 'ruby-debug']:
+  package { ['hiera', 'hiera-puppet']:
     ensure   => present,
     provider => 'gem',
-  } <- Package['make', 'gcc']
+  }
+}
+
+$ruby18 = str2bool(inline_template('<%= scope.lookupvar("::rubyversion") < "1.9" %>'))
+if $ruby18 {
+  package { 'ruby-debug':
+    ensure   => present,
+    provider => 'gem',
+    require  => Package[[ 'make', 'gcc']],
+  }
+} else {
+  package { 'debugger':
+    ensure   => present,
+    provider => 'gem',
+    require  => Package[[ 'make', 'gcc']],
+  }
 }
 
 file { "${settings::confdir}/hiera.yaml":

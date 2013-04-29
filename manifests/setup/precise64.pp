@@ -35,5 +35,5 @@ exec { '/usr/bin/apt-get update':
 # run the apt get update before any packages are installed!
 Exec['/usr/bin/apt-get update'] -> Package<||>
 
-package { 'vim': ensure => present }
+package { [ 'vim', 'lvm2' ]: ensure => present }
 
