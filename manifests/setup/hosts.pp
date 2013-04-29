@@ -44,7 +44,7 @@ package { ['hiera', 'hiera-puppet', 'ruby-debug']:
   provider => 'gem',
 }
 
-file { '/etc/puppet/hiera.yaml':
+file { "${settings::confdir}/hiera.yaml":
   content =>
 '
 ---
@@ -73,7 +73,7 @@ file_line { 'wgetrc_proxy':
 # not sure if this is the best place for my puppetmaster config
 node /puppetmaster/ {
   Ini_setting {
-    path    => '/etc/puppet/puppet.conf',
+    path    => $settings::config,
     section => 'main',
     ensure  => present,
   }
