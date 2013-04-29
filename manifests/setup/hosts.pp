@@ -36,15 +36,19 @@ puppet apply --modulepath /etc/puppet/modules-0/ --certname ${clientcert} /etc/p
 
 package { ['make', 'gcc']:
   ensure => present,
-} ->
-
-# install hiera, to support Puppet pre 3.0
-package { ['hiera', 'hiera-puppet', 'ruby-debug']:
-  ensure   => present,
-  provider => 'gem',
 }
 
-file { '/etc/puppet/hiera.yaml':
+if $::puppetversion !~ /(?i:enterprise)/ {
+  # install hiera, to support Puppet pre 3.0
+  # note that we don't need to do this on PE
+  # as hiera is installed with PE by default
+  package { ['hiera', 'hiera-puppet', 'ruby-debug']:
+    ensure   => present,
+    provider => 'gem',
+  } <- Package['make', 'gcc']
+}
+
+file { "${settings::confdir}/hiera.yaml":
   content =>
 '
 ---
@@ -73,7 +77,7 @@ file_line { 'wgetrc_proxy':
 # not sure if this is the best place for my puppetmaster config
 node /puppetmaster/ {
   Ini_setting {
-    path    => '/etc/puppet/puppet.conf',
+    path    => $settings::config,
     section => 'main',
     ensure  => present,
   }
