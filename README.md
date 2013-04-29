@@ -1,26 +1,30 @@
 # sharable openstack puppet dev environment
 
-This project contains everything that you need to rebuild the
-same development environment that I built initilaly for the
-folsom implementation of the openstack puppet modules.
+This project contains everything that you need to rebuild the same development
+environment that I built initilaly for the folsom implementation of the
+openstack puppet modules.
 
 # prereqs
 
 1. Ensure that you have rake and rubygems installed
 
-2. install vagrant and dependencies:
+2. install Vagrant and dependencies:
 
-vagrant should be installed (the latest version of vagrant is generally available as a package)
+vagrant 1.2.2 or later should be installed.
 
-    > gem install vagrant
+    > http://downloads.vagrantup.com
 
-virtualbox should be installed
+Virtualbox or VMware Fusion should be installed. (If you choose to use VMware
+Fusion you will also need http://www.vagrantup.com/vmware#buy-now.)
 
-3. Install librarian-puppet.
+    > https://www.virtualbox.org/wiki/Downloads
+    > http://www.vmware.com/products/fusion/overview.html
+
+3. Install librarian-puppet. (Some versions have bugs...kinda the luck of the draw.)
 
     > gem install librarian-puppet
 
-3. it is strongly recommended that you set up a proxy (like squid!) to speed up perforance
+4. It is strongly recommended that you set up a proxy (like squid!) to speed up perforance
 of package installation. If you do not use a proxy, you need to change some settings in
 your site manifest.
 
@@ -66,6 +70,9 @@ Configure the precise64.pp file to point to your apt cache
       proxy_host => '172.16.0.1',
       proxy_port => '3128',
     }
+
+You'll want to change line 131 or 133 to use the same address to configured in the
+precise64.pp and/or centos.pp.
 
 Too see a list of the virtual machines that are managed by vagrant, run
 

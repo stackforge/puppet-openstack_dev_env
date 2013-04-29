@@ -36,12 +36,30 @@ puppet apply --modulepath /etc/puppet/modules-0/ --certname ${clientcert} /etc/p
 
 package { ['make', 'gcc']:
   ensure => present,
-} ->
+}
 
-# install hiera, to support Puppet pre 3.0
-package { ['hiera', 'hiera-puppet', 'ruby-debug']:
-  ensure   => present,
-  provider => 'gem',
+$puppet2 = str2bool(inline_template('<%= scope.lookupvar("::puppetversion") < "3.0" %>'))
+if $puppet2 {
+  # install hiera, to support Puppet pre 3.0
+  package { ['hiera', 'hiera-puppet']:
+    ensure   => present,
+    provider => 'gem',
+  }
+}
+
+$ruby18 = str2bool(inline_template('<%= scope.lookupvar("::rubyversion") < "1.9" %>'))
+if $ruby18 {
+  package { 'ruby-debug':
+    ensure   => present,
+    provider => 'gem',
+    require  => Package[[ 'make', 'gcc']],
+  }
+} else {
+  package { 'debugger':
+    ensure   => present,
+    provider => 'gem',
+    require  => Package[[ 'make', 'gcc']],
+  }
 }
 
 file { '/etc/puppet/hiera.yaml':
