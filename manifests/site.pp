@@ -188,7 +188,6 @@ node /openstack-controller/ {
     # Horizon
     cache_server_ip        => '127.0.0.1',
     cache_server_port      => '11211',
-    swift                  => false,
     horizon_app_links      => undef,
     # General
     verbose                => $verbose,
