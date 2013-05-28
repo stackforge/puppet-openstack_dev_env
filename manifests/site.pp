@@ -60,7 +60,7 @@ $auto_assign_floating_ip = hiera('auto_assign_floating_ip', false)
 #### controller/compute mode settings ####
 $openstack_controller = hiera('openstack_controller', '172.16.0.3')
 #### controller/compute mode settings ####
-$openstack_version    = hiera('openstack_version', 'folsom')
+$openstack_version    = hiera('openstack_version', 'grizzly')
 
 # node declaration for all in one
 import 'scenarios/all_in_one.pp'

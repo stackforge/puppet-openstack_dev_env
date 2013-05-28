@@ -1,4 +1,6 @@
 ---
+# set the version to use
+openstack_version: grizzly
 # database password
 mysql_root_password: mysql_root_password
 keystone_db_password: keystone_db_password
