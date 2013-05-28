@@ -22,7 +22,7 @@ verbose: True
 public_interface: eth0
 private_interface: eth2
 rabbit_password: rabbit_password
-rabbit_user: nova
+rabbit_user: my_rabbit_user
 secret_key: secret_key
 libvirt_type: qemu
 #libvirt_type: kvm
