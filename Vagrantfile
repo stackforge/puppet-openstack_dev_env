@@ -209,7 +209,7 @@ Vagrant::Config.run do |config|
           puppet.manifests_path = 'manifests'
           puppet.manifest_file  = 'site.pp'
           puppet.module_path    = 'modules'
-          puppet.options        = puppet_options
+          puppet.options        = puppet_options.push('--debug')
         end
 
       elsif run_mode == :agent

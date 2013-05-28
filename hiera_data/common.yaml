@@ -22,7 +22,7 @@ verbose: True
 public_interface: eth0
 private_interface: eth2
 rabbit_password: rabbit_password
-rabbit_user: nova
+rabbit_user: my_rabbit_user
 secret_key: secret_key
 libvirt_type: qemu
 #libvirt_type: kvm
@@ -40,3 +40,5 @@ swift_shared_secret: changeme
 swift_local_net_ip: "%{ipaddress_eth1}"
 swift_proxy_address: 172.16.0.21
 swift_controller_node_public: 172.16.0.21
+
+openstack_version: grizzly

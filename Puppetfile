@@ -1,4 +1,4 @@
-forge "http://forge.puppetlabs.com"
+#forge "http://forge.puppetlabs.com"
 
 mod 'puppetlabs/openstack', :git => 'git://github.com/stackforge/puppet-openstack'
 mod 'puppetlabs/nova', :git => 'git://github.com/stackforge/puppet-nova'
