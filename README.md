@@ -6,7 +6,7 @@ folsom implementation of the openstack puppet modules.
 
 # prereqs
 
-1. Ensure that you have rake and rubygems installed
+1. Ensure that you have rubygems installed
 
 2. install vagrant and dependencies:
 
@@ -16,9 +16,9 @@ vagrant should be installed (the latest version of vagrant is generally availabl
 
 virtualbox should be installed
 
-3. Install librarian-puppet.
+3. Install librarian-puppet-simple.
 
-    > gem install librarian-puppet
+    > gem install librarian-puppet-simple
 
 3. it is strongly recommended that you set up a proxy (like squid!) to speed up perforance
 of package installation. If you do not use a proxy, you need to change some settings in
@@ -28,28 +28,23 @@ your site manifest.
 
 This project contains the following files
 
-Vagrantfile - used to specify the virtual machines that vagrant can use to
-spin up test openstack environments.
+Vagrantfile
+  specifies virtual machines that build openstack test/dev environments.
 
-Rakefile - stores tasks that can be used to build out openstack environments
-
-Puppetfile - used by librarian puppet to install the required modules
+Puppetfile
+  used by librarian puppet to install the required modules
 
 manifests/setup/hosts.pp
-
-stores basic host setup (ip addresses for vagrant targets)
+  stores basic host setup (ip addresses for vagrant targets)
 
 manifests/setup/percise64.pp
-
-stores apt setup, configured to use a proxy, and folsom package pointer(s)
+  stores apt setup, configured to use a proxy, and folsom package pointer(s)
 
 manifests/setup/centos.pp
-
-stores yum setup, configuration for a local yum repo machine, and folsom package pointer(s)
+  stores yum setup, configuration for a local yum repo machine, and folsom package pointer(s)
 
 manifests/site.pp
-
-just what you'd expect it to be.
+  stores site manifests for configuring openstack
 
 # installing module deps
 
@@ -78,10 +73,8 @@ Too see a list of the virtual machines that are managed by vagrant, run
     keystone                 not created
     mysql                    not created
 
-To see a list of all available rake tasks, run:
-(rake tasks have not yet been defined)
-
-    > rake -T
+The best maintained examples are for a two node install
+based on a compute and controller.
 
 Deploy a controller and a compute node:
 
