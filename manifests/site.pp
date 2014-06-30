@@ -210,13 +210,13 @@ node /compute/ {
     if $::osfamily == 'Debian' {
       Package['libvirt'] ->
       file_line { 'quemu_hack':
-        line => 'cgroup_device_acl = [
+        ensure => present,
+        path   => '/etc/libvirt/qemu.conf',
+        line   => 'cgroup_device_acl = [
        "/dev/null", "/dev/full", "/dev/zero",
        "/dev/random", "/dev/urandom",
        "/dev/ptmx", "/dev/kvm", "/dev/kqemu",
        "/dev/rtc", "/dev/hpet", "/dev/net/tun",]',
-        path   => '/etc/libvirt/qemu.conf',
-        ensure => present,
       } ~> Service['libvirt']
     } elsif $::osfamily == 'RedHat' {
 
@@ -236,14 +236,14 @@ node /compute/ {
       nova_config { 'DEFAULT/rpc_backend': value => 'nova.openstack.common.rpc.impl_kombu';}
 
       nova_config{
-        "DEFAULT/network_host": value => $openstack_controller;
-        "DEFAULT/libvirt_inject_partition": value => "-1";
+        'DEFAULT/network_host': value => $openstack_controller;
+        'DEFAULT/libvirt_inject_partition': value => '-1';
       }
-      if $libvirt_type == "qemu" {
-        file { "/usr/bin/qemu-system-x86_64":
+      if $libvirt_type == 'qemu' {
+        file { '/usr/bin/qemu-system-x86_64':
           ensure => link,
-          target => "/usr/libexec/qemu-kvm",
-          notify => Service["nova-compute"],
+          target => '/usr/libexec/qemu-kvm',
+          notify => Service['nova-compute'],
         }
       }
       firewall { '001 vnc listen incomming':
@@ -306,7 +306,7 @@ node /tempest/ {
     Nova_config<||> ~> Service['nova-api']
     Nova_paste_api_ini<||> ~> Service['nova-api']
 
-    nova_config { 'DEFAULT/api_rate_limit': value => 'false' }
+    nova_config { 'DEFAULT/api_rate_limit': value => false }
 
     # remove rate limiting
     # this may be folsom specific
@@ -382,10 +382,10 @@ node puppetmaster {
     repos      => 'main',
     key        => '4BD6EC30',
     key_server => 'pgp.mit.edu',
-    tag       => ['puppet'],
+    tag        => ['puppet'],
   }
 
-  Exec["apt_update"] -> Package <| |>
+  Exec['apt_update'] -> Package <| |>
 
   package { ['hiera', 'hiera-puppet']:
     ensure   => present,

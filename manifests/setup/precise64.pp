@@ -7,9 +7,9 @@
 $openstack_version  = hiera('openstack_version', 'folsom')
 
 apt::source { 'openstack_cloud_archive':
-  location          => "http://ubuntu-cloud.archive.canonical.com/ubuntu",
+  location          => 'http://ubuntu-cloud.archive.canonical.com/ubuntu',
   release           => "precise-updates/${openstack_version}",
-  repos             => "main",
+  repos             => 'main',
   required_packages => 'ubuntu-cloud-keyring',
 }
 
@@ -28,7 +28,7 @@ class { 'apt':
 exec { '/usr/bin/apt-get update':
   require     => Class['apt'],
   refreshonly => true,
-  subscribe   => [Class['apt'], Apt::Source["openstack_cloud_archive"]],
+  subscribe   => [Class['apt'], Apt::Source['openstack_cloud_archive']],
   logoutput   => true,
 }
 
@@ -36,4 +36,3 @@ exec { '/usr/bin/apt-get update':
 Exec['/usr/bin/apt-get update'] -> Package<||>
 
 package { 'vim': ensure => present }
-

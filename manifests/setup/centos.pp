@@ -18,19 +18,19 @@ exec { '/bin/bash /tmp/setup_epel.sh':
 }
 
 ini_setting { 'enable_epel_testing':
+  ensure  => present,
   path    => '/etc/yum.repos.d/epel-testing.repo',
   section => 'epel-testing',
   setting => 'enabled',
   value   => '1',
-  ensure  => present,
   require => Exec['/bin/bash /tmp/setup_epel.sh'],
 }
 
 ini_setting { 'yum_proxy':
+  ensure  => present,
   path    => '/etc/yum.conf',
   section => 'main',
   setting => 'proxy',
   value   => 'http://172.16.0.1:3128',
-  ensure  => present,
   require => Exec['/bin/bash /tmp/setup_epel.sh'],
 }
