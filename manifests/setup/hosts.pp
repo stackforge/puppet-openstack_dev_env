@@ -42,10 +42,10 @@ if $::puppetversion !~ /(?i:enterprise)/ {
   # install hiera, to support Puppet pre 3.0
   # note that we don't need to do this on PE
   # as hiera is installed with PE by default
-  package { ['hiera', 'hiera-puppet', 'ruby-debug']:
+  Package['make', 'gcc'] -> package { ['hiera', 'hiera-puppet', 'ruby-debug']:
     ensure   => present,
     provider => 'gem',
-  } <- Package['make', 'gcc']
+  }
 }
 
 file { "${settings::confdir}/hiera.yaml":
@@ -69,7 +69,7 @@ package { 'wget':
 
 file_line { 'wgetrc_proxy':
   ensure  => present,
-  line    => "https_proxy = http://172.16.0.1:3128/",
+  line    => 'https_proxy = http://172.16.0.1:3128/',
   path    => '/etc/wgetrc',
   require => Package['wget'],
 }

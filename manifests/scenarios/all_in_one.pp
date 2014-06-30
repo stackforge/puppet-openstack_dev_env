@@ -58,13 +58,13 @@ node /openstack-all/ {
   # this has a bug, and is constantly added to the file
   Package['libvirt'] ->
   file_line { 'quemu_hack':
-    line => 'cgroup_device_acl = [
+    ensure => present,
+    line   => 'cgroup_device_acl = [
    "/dev/null", "/dev/full", "/dev/zero",
    "/dev/random", "/dev/urandom",
    "/dev/ptmx", "/dev/kvm", "/dev/kqemu",
    "/dev/rtc", "/dev/hpet", "/dev/net/tun",]',
     path   => '/etc/libvirt/qemu.conf',
-    ensure => present,
   } ~> Service['libvirt']
 
 }
